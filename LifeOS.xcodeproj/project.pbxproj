@@ -1,0 +1,578 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1001 /* LifeOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2001 /* LifeOSApp.swift */; };
+		1002 /* TaskPriority.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2002 /* TaskPriority.swift */; };
+		1003 /* TaskStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2003 /* TaskStatus.swift */; };
+		1004 /* LifeTask.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2004 /* LifeTask.swift */; };
+		1005 /* HapticService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2005 /* HapticService.swift */; };
+		1006 /* DateFormatters.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2006 /* DateFormatters.swift */; };
+		1007 /* TaskRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2007 /* TaskRow.swift */; };
+		1008 /* TodayEmptyStateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2008 /* TodayEmptyStateView.swift */; };
+		1009 /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2009 /* TodayView.swift */; };
+		1010 /* AddTaskView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2010 /* AddTaskView.swift */; };
+		1011 /* QuickAddSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2011 /* QuickAddSheet.swift */; };
+		1012 /* MeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2012 /* MeView.swift */; };
+		1013 /* CustomTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2013 /* CustomTabBar.swift */; };
+		1014 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2014 /* MainTabView.swift */; };
+		1015 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2015 /* Assets.xcassets */; };
+		1016 /* LifeTaskTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2016 /* LifeTaskTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		3001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 5001;
+			remoteInfo = LifeOS;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		2000 /* LifeOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LifeOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2001 /* LifeOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeOSApp.swift; sourceTree = "<group>"; };
+		2002 /* TaskPriority.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskPriority.swift; sourceTree = "<group>"; };
+		2003 /* TaskStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskStatus.swift; sourceTree = "<group>"; };
+		2004 /* LifeTask.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeTask.swift; sourceTree = "<group>"; };
+		2005 /* HapticService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticService.swift; sourceTree = "<group>"; };
+		2006 /* DateFormatters.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateFormatters.swift; sourceTree = "<group>"; };
+		2007 /* TaskRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TaskRow.swift; sourceTree = "<group>"; };
+		2008 /* TodayEmptyStateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayEmptyStateView.swift; sourceTree = "<group>"; };
+		2009 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		2010 /* AddTaskView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTaskView.swift; sourceTree = "<group>"; };
+		2011 /* QuickAddSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuickAddSheet.swift; sourceTree = "<group>"; };
+		2012 /* MeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MeView.swift; sourceTree = "<group>"; };
+		2013 /* CustomTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomTabBar.swift; sourceTree = "<group>"; };
+		2014 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		2015 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		2016 /* LifeTaskTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeTaskTests.swift; sourceTree = "<group>"; };
+		2017 /* LifeOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LifeOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		2018 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		2019 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		0002 = {
+			isa = PBXGroup;
+			children = (
+				0003 /* LifeOS */,
+				0004 /* LifeOSTests */,
+				0005 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		0003 /* LifeOS */ = {
+			isa = PBXGroup;
+			children = (
+				0006 /* App */,
+				0007 /* Models */,
+				0008 /* Views */,
+				0009 /* Services */,
+				0010 /* Utilities */,
+				0011 /* Resources */,
+			);
+			path = LifeOS;
+			sourceTree = "<group>";
+		};
+		0004 /* LifeOSTests */ = {
+			isa = PBXGroup;
+			children = (
+				2016 /* LifeTaskTests.swift */,
+				2019 /* Info.plist */,
+			);
+			path = LifeOSTests;
+			sourceTree = "<group>";
+		};
+		0005 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				2000 /* LifeOS.app */,
+				2017 /* LifeOSTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		0006 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				2001 /* LifeOSApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		0007 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				2002 /* TaskPriority.swift */,
+				2003 /* TaskStatus.swift */,
+				2004 /* LifeTask.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		0008 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				0012 /* Navigation */,
+				0013 /* Today */,
+				0014 /* Add */,
+				0015 /* Me */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		0009 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				2005 /* HapticService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		0010 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				2006 /* DateFormatters.swift */,
+			);
+			path = Utilities;
+			sourceTree = "<group>";
+		};
+		0011 /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				2015 /* Assets.xcassets */,
+				2018 /* Info.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		0012 /* Navigation */ = {
+			isa = PBXGroup;
+			children = (
+				2013 /* CustomTabBar.swift */,
+				2014 /* MainTabView.swift */,
+			);
+			path = Navigation;
+			sourceTree = "<group>";
+		};
+		0013 /* Today */ = {
+			isa = PBXGroup;
+			children = (
+				2009 /* TodayView.swift */,
+				2007 /* TaskRow.swift */,
+				2008 /* TodayEmptyStateView.swift */,
+			);
+			path = Today;
+			sourceTree = "<group>";
+		};
+		0014 /* Add */ = {
+			isa = PBXGroup;
+			children = (
+				2011 /* QuickAddSheet.swift */,
+				2010 /* AddTaskView.swift */,
+			);
+			path = Add;
+			sourceTree = "<group>";
+		};
+		0015 /* Me */ = {
+			isa = PBXGroup;
+			children = (
+				2012 /* MeView.swift */,
+			);
+			path = Me;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		5001 /* LifeOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6001 /* Build configuration list for PBXNativeTarget "LifeOS" */;
+			buildPhases = (
+				7001 /* Sources */,
+				4001 /* Frameworks */,
+				7002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LifeOS;
+			productName = LifeOS;
+			productReference = 2000 /* LifeOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+		5002 /* LifeOSTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 6002 /* Build configuration list for PBXNativeTarget "LifeOSTests" */;
+			buildPhases = (
+				7003 /* Sources */,
+				4002 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				3002 /* PBXTargetDependency */,
+			);
+			name = LifeOSTests;
+			productName = LifeOSTests;
+			productReference = 2017 /* LifeOSTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		0001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					5001 = {
+						CreatedOnToolsVersion = 15.0;
+					};
+					5002 = {
+						CreatedOnToolsVersion = 15.0;
+						TestTargetID = 5001;
+					};
+				};
+			};
+			buildConfigurationList = 6000 /* Build configuration list for PBXProject "LifeOS" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 0002;
+			productRefGroup = 0005 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				5001 /* LifeOS */,
+				5002 /* LifeOSTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		7002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1015 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		7001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1001 /* LifeOSApp.swift in Sources */,
+				1002 /* TaskPriority.swift in Sources */,
+				1003 /* TaskStatus.swift in Sources */,
+				1004 /* LifeTask.swift in Sources */,
+				1005 /* HapticService.swift in Sources */,
+				1006 /* DateFormatters.swift in Sources */,
+				1007 /* TaskRow.swift in Sources */,
+				1008 /* TodayEmptyStateView.swift in Sources */,
+				1009 /* TodayView.swift in Sources */,
+				1010 /* AddTaskView.swift in Sources */,
+				1011 /* QuickAddSheet.swift in Sources */,
+				1012 /* MeView.swift in Sources */,
+				1013 /* CustomTabBar.swift in Sources */,
+				1014 /* MainTabView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7003 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1016 /* LifeTaskTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		3002 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 5001 /* LifeOS */;
+			targetProxy = 3001 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		8001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDEFINED_VARIABLES = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		8002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDEFINED_VARIABLES = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		8003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LifeOS/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LifeOS;
+				INFOPLIST_KEY_LSRequiresIPhoneOS = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lifeos.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1";
+			};
+			name = Debug;
+		};
+		8004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LifeOS/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = LifeOS;
+				INFOPLIST_KEY_LSRequiresIPhoneOS = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lifeos.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1";
+			};
+			name = Release;
+		};
+		8005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LifeOSTests/Info.plist;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lifeos.LifeOSTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LifeOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LifeOS";
+			};
+			name = Debug;
+		};
+		8006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = LifeOSTests/Info.plist;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.lifeos.LifeOSTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LifeOS.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LifeOS";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		6000 /* Build configuration list for PBXProject "LifeOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8001 /* Debug */,
+				8002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6001 /* Build configuration list for PBXNativeTarget "LifeOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8003 /* Debug */,
+				8004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		6002 /* Build configuration list for PBXNativeTarget "LifeOSTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8005 /* Debug */,
+				8006 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 0001 /* Project object */;
+}
