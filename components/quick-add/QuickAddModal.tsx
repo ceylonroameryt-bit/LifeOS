@@ -10,9 +10,12 @@ import {
   Flame,
   FileText,
   Target,
+  Briefcase,
+  Heart,
   Sparkles,
   Mic,
   X,
+  ArrowRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +28,7 @@ interface QuickAddModalProps {
 export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps) {
   const [selectedType, setSelectedType] = useState<QuickAddType | null>(null);
   const [naturalText, setNaturalText] = useState('');
+  const [detectedType, setDetectedType] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
   // Keyboard shortcut listener (Cmd+K / Ctrl+K)
@@ -35,7 +39,6 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
         if (isOpen) {
           onClose();
         } else {
-          // Trigger open via custom event or prop
           window.dispatchEvent(new Event('lifeos-open-quick-add'));
         }
       }
@@ -47,11 +50,34 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
+  // Real-time smart capture intent detection
+  useEffect(() => {
+    const lower = naturalText.toLowerCase().trim();
+    if (!lower) {
+      setDetectedType(null);
+      return;
+    }
+    if (lower.includes('£') || lower.includes('$') || lower.includes('tesco') || /\b\d+(\.\d{1,2})?\b/.test(lower) && (lower.includes('paid') || lower.includes('spent') || lower.includes('cost') || lower.includes('monthly'))) {
+      setDetectedType('Expense');
+    } else if (lower.startsWith('idea') || lower.includes('podcast') || lower.includes('video') || lower.includes('build tool')) {
+      setDetectedType('Idea');
+    } else if (lower.includes('job') || lower.includes('security') || lower.includes('interview') || lower.includes('recruiter') || lower.includes('analyst')) {
+      setDetectedType('Career Job');
+    } else if (lower.includes('habit') || lower.includes('slipped') || lower.includes('resisted') || lower.includes('streak')) {
+      setDetectedType('Habit');
+    } else if (lower.includes('wishlist') || lower.includes('buy') || lower.includes('lens')) {
+      setDetectedType('Wishlist');
+    } else {
+      setDetectedType('Task');
+    }
+  }, [naturalText]);
+
   // Reset state on open/close
   useEffect(() => {
     if (!isOpen) {
       setSelectedType(null);
       setNaturalText('');
+      setDetectedType(null);
       setNotice(null);
     }
   }, [isOpen]);
@@ -63,36 +89,48 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
       type: 'task' as QuickAddType,
       label: 'Task',
       icon: CheckCircle2,
-      bg: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-100 dark:border-blue-900/60',
-    },
-    {
-      type: 'idea' as QuickAddType,
-      label: 'Idea',
-      icon: Lightbulb,
-      bg: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border-amber-100 dark:border-amber-900/60',
+      bg: 'bg-blue-50 dark:bg-blue-950/40 text-primary border-blue-100 dark:border-blue-900/60',
     },
     {
       type: 'expense' as QuickAddType,
       label: 'Expense',
       icon: CreditCard,
-      bg: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-100 dark:border-emerald-900/60',
+      bg: 'bg-emerald-50 dark:bg-emerald-950/40 text-success border-emerald-100 dark:border-emerald-900/60',
+    },
+    {
+      type: 'idea' as QuickAddType,
+      label: 'Idea',
+      icon: Lightbulb,
+      bg: 'bg-amber-50 dark:bg-amber-950/40 text-idea border-amber-100 dark:border-amber-900/60',
     },
     {
       type: 'habit' as QuickAddType,
       label: 'Habit',
       icon: Flame,
-      bg: 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-100 dark:border-rose-900/60',
+      bg: 'bg-rose-50 dark:bg-rose-950/40 text-danger border-rose-100 dark:border-rose-900/60',
+    },
+    {
+      type: 'job' as QuickAddType,
+      label: 'Job',
+      icon: Briefcase,
+      bg: 'bg-cyan-50 dark:bg-cyan-950/40 text-cyan-600 dark:text-cyan-400 border-cyan-100 dark:border-cyan-900/60',
     },
     {
       type: 'note' as QuickAddType,
       label: 'Note',
       icon: FileText,
-      bg: 'bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border-purple-100 dark:border-purple-900/60',
+      bg: 'bg-purple-light dark:bg-purple/20 text-purple border-purple-100 dark:border-purple/30',
     },
     {
       type: 'goal' as QuickAddType,
       label: 'Goal',
       icon: Target,
+      bg: 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border-indigo-100 dark:border-indigo-900/60',
+    },
+    {
+      type: 'wishlist' as QuickAddType,
+      label: 'Wishlist',
+      icon: Heart,
       bg: 'bg-pink-50 dark:bg-pink-950/40 text-pink-600 dark:text-pink-400 border-pink-100 dark:border-pink-900/60',
     },
   ];
@@ -101,7 +139,7 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
     if (type === 'task') {
       setSelectedType('task');
     } else {
-      setNotice(`${type.charAt(0).toUpperCase() + type.slice(1)} capture unlocks in next phase`);
+      setNotice(`${type.charAt(0).toUpperCase() + type.slice(1)} quick-entry ready in respective module.`);
       setTimeout(() => setNotice(null), 2500);
     }
   };
@@ -109,7 +147,7 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
   const handleNaturalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!naturalText.trim()) return;
-    // For Phase 1, pass natural input as task title
+    // Route to task creation with parsed title
     setSelectedType('task');
   };
 
@@ -121,7 +159,7 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
         className="fixed inset-0 bg-slate-900/40 dark:bg-black/60 backdrop-blur-sm transition-opacity"
       />
 
-      {/* Modal / Bottom Sheet Box */}
+      {/* Modal / Bottom Sheet */}
       <div className="relative w-full max-w-lg bg-card rounded-t-3xl sm:rounded-3xl shadow-float border border-border/80 overflow-hidden z-10 transition-all max-h-[92vh] flex flex-col">
         {selectedType === 'task' ? (
           <AddTaskForm
@@ -135,7 +173,7 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
             <div className="w-10 h-1 rounded-full bg-slate-200 dark:bg-slate-700 mx-auto mb-4 sm:hidden" />
 
             {/* Header */}
-            <div className="flex items-start justify-between mb-6">
+            <div className="flex items-start justify-between mb-5">
               <div>
                 <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100">
                   What do you want to add?
@@ -153,15 +191,15 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
               </button>
             </div>
 
-            {/* Notice pill if clicked coming soon */}
+            {/* Notice pill */}
             {notice && (
-              <div className="mb-4 px-3 py-2 text-xs font-semibold text-center text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 rounded-xl border border-blue-200/60 animate-in fade-in">
+              <div className="mb-4 px-3 py-2 text-xs font-semibold text-center text-primary bg-blue-50 dark:bg-blue-950/60 rounded-xl border border-blue-200/60 animate-in fade-in">
                 {notice}
               </div>
             )}
 
-            {/* 2-Column Action Tiles */}
-            <div className="grid grid-cols-2 gap-3 mb-6">
+            {/* 2-Column Action Tiles (8 tiles) */}
+            <div className="grid grid-cols-2 gap-2.5 mb-5">
               {actions.map((act) => {
                 const Icon = act.icon;
                 return (
@@ -170,12 +208,12 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
                     type="button"
                     onClick={() => handleSelect(act.type)}
                     className={cn(
-                      'flex items-center gap-3 p-3.5 rounded-2xl border text-left transition-all duration-150 select-none active:scale-[0.98]',
+                      'flex items-center gap-3 p-3 rounded-2xl border text-left transition-all duration-150 select-none active:scale-[0.98]',
                       act.bg
                     )}
                   >
-                    <div className="w-9 h-9 rounded-xl bg-white/80 dark:bg-black/20 flex items-center justify-center flex-shrink-0 shadow-xs">
-                      <Icon className="w-5 h-5 stroke-[2]" />
+                    <div className="w-8 h-8 rounded-xl bg-white/80 dark:bg-black/20 flex items-center justify-center flex-shrink-0 shadow-xs">
+                      <Icon className="w-4 h-4 stroke-[2.2]" />
                     </div>
                     <span className="font-semibold text-sm text-slate-800 dark:text-slate-100">
                       {act.label}
@@ -185,9 +223,9 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
               })}
             </div>
 
-            {/* Natural Text / Speech Input */}
+            {/* Smart Capture Input */}
             <form onSubmit={handleNaturalSubmit}>
-              <div className="flex items-center gap-2.5 px-4 py-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/80 focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all">
+              <div className="flex items-center gap-2.5 px-4 py-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700/80 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
                 <Sparkles className="w-4 h-4 text-slate-400 flex-shrink-0" />
                 <input
                   type="text"
@@ -196,6 +234,12 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
                   placeholder="Type or speak anything..."
                   className="flex-1 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none"
                 />
+                {detectedType && (
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-primary animate-in fade-in flex items-center gap-1">
+                    {detectedType}
+                    <ArrowRight className="w-2.5 h-2.5" />
+                  </span>
+                )}
                 <button
                   type="button"
                   title="Voice dictation"

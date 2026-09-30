@@ -3,11 +3,14 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Task } from '@/types';
 import { taskService, DEFAULT_TASKS } from '@/lib/services/taskService';
-import { getGreeting, formatHeaderDate, formatMobileDate } from '@/lib/dates';
+import { getGreeting, formatHeaderDate } from '@/lib/dates';
 import { AppShell } from '@/components/layout/AppShell';
+import { TodayHero } from '@/components/today/TodayHero';
 import { TodayTasks } from '@/components/today/TodayTasks';
 import { MoneyCard } from '@/components/today/MoneyCard';
 import { HabitCard } from '@/components/today/HabitCard';
+import { CareerCard } from '@/components/today/CareerCard';
+import { UpcomingCard } from '@/components/today/UpcomingCard';
 import { IdeaCard } from '@/components/today/IdeaCard';
 import { WeeklySummaryCard } from '@/components/today/WeeklySummaryCard';
 import { MeView } from '@/components/me/MeView';
@@ -46,12 +49,19 @@ export default function HomePage() {
   };
 
   const greeting = getGreeting();
-  const headerDateDesktop = formatHeaderDate();
-  const headerDateMobile = formatMobileDate();
+  const headerDate = formatHeaderDate(); // e.g. "Wednesday, 30 September 2026"
 
   return (
     <AppShell>
-      {({ currentTab, userName, onOpenQuickAdd, isDark, onToggleTheme, onUpdateName }) => {
+      {({
+        currentTab,
+        setCurrentTab,
+        userName,
+        onOpenQuickAdd,
+        isDark,
+        onToggleTheme,
+        onUpdateName,
+      }) => {
         if (currentTab === 'me' || currentTab === 'settings') {
           return (
             <MeView
@@ -64,25 +74,19 @@ export default function HomePage() {
         }
 
         return (
-          <div className="space-y-6 md:space-y-8 pb-24 md:pb-12 animate-in fade-in duration-300">
-            {/* Header */}
-            <div>
-              <p className="text-sm md:text-base font-medium text-slate-500 dark:text-slate-400">
-                {greeting}
-              </p>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-slate-100 mt-0.5">
-                {userName}
-              </h1>
-              <p className="text-xs md:text-sm font-medium text-slate-400 dark:text-slate-500 mt-1">
-                <span className="hidden md:inline">{headerDateDesktop}</span>
-                <span className="md:hidden">{headerDateMobile}</span>
-              </p>
-            </div>
+          <div className="space-y-6 md:space-y-7 pb-24 md:pb-12 animate-in fade-in duration-300">
+            {/* Hero Greeting Section with subtle sunrise elements */}
+            <TodayHero
+              userName={userName}
+              greeting={greeting}
+              formattedDate={`${headerDate} 2026`}
+            />
 
-            {/* Unified Responsive Grid (Mobile single-column with side-by-side cards / Desktop 2-column) */}
+            {/* Dashboard Layout: Mobile single-column / Tablet & Desktop 2-column grid */}
             <div className="grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-6 items-start">
-              {/* Left Column (Desktop 7 cols, Mobile full width) */}
+              {/* Left Column (Desktop 7 cols / Mobile full width) */}
               <div className="md:col-span-7 space-y-5 md:space-y-6">
+                {/* 1. Today Tasks Card */}
                 <TodayTasks
                   tasks={tasks}
                   loading={loading}
@@ -91,16 +95,23 @@ export default function HomePage() {
                   onOpenQuickAdd={onOpenQuickAdd}
                 />
 
+                {/* 2. Career Card */}
+                <CareerCard />
+
+                {/* 3. This Week Summary */}
                 <WeeklySummaryCard />
               </div>
 
-              {/* Right Column (Desktop 5 cols, Mobile cards underneath) */}
+              {/* Right Column (Desktop 5 cols / Mobile sequential flow) */}
               <div className="md:col-span-5 space-y-4 md:space-y-5">
-                {/* On mobile (<768px), Money and Habits sit side-by-side in 2 cols */}
+                {/* Side-by-side Money & Habits on mobile, stacked on desktop */}
                 <div className="grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-5">
                   <MoneyCard />
                   <HabitCard />
                 </div>
+
+                {/* Upcoming Card (Life Admin & Renewals) */}
+                <UpcomingCard />
 
                 {/* Ideas Card */}
                 <IdeaCard />

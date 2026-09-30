@@ -10,6 +10,7 @@ const DEFAULT_PROFILE: Profile = {
   currency: 'GBP',
   timezone: 'Europe/London',
   budget_period: 'weekly',
+  weekly_budget: 150,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
 };

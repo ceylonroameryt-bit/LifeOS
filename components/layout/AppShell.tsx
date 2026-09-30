@@ -3,13 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { MobileNav } from './MobileNav';
 import { DesktopSidebar } from './DesktopSidebar';
+import { TabletRail } from './TabletRail';
 import { QuickAddModal } from '@/components/quick-add/QuickAddModal';
 import { profileService } from '@/lib/services/profileService';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, Search } from 'lucide-react';
 
 interface AppShellProps {
   children: (props: {
     currentTab: string;
+    setCurrentTab: (tab: string) => void;
     userName: string;
     onOpenQuickAdd: () => void;
     isDark: boolean;
@@ -78,9 +80,19 @@ export function AppShell({ children }: AppShellProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-[#F8F9FA] dark:bg-[#090A0F] text-slate-900 dark:text-slate-100 transition-colors duration-200">
-      {/* Desktop Sidebar (visible on md:flex and above) */}
-      <div className="hidden md:block flex-shrink-0">
+    <div className="min-h-screen flex flex-col md:flex-row bg-[#F6F8FC] dark:bg-[#0B0E14] text-slate-900 dark:text-slate-100 transition-colors duration-200">
+      {/* Tablet Rail (visible between 768px and 1199px) */}
+      <div className="hidden md:block xl:hidden flex-shrink-0">
+        <TabletRail
+          currentTab={currentTab}
+          onTabChange={setCurrentTab}
+          onOpenQuickAdd={() => setIsQuickAddOpen(true)}
+          userName={userName}
+        />
+      </div>
+
+      {/* Desktop Full Sidebar (visible on xl >= 1200px) */}
+      <div className="hidden xl:block flex-shrink-0">
         <DesktopSidebar
           currentTab={currentTab}
           onTabChange={setCurrentTab}
@@ -92,8 +104,23 @@ export function AppShell({ children }: AppShellProps) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Minimal Bar on Tablet & Desktop */}
-        <header className="hidden md:flex items-center justify-end px-8 py-3.5 border-b border-slate-200/50 dark:border-slate-800/60 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
-          <div className="flex items-center gap-3">
+        <header className="hidden md:flex items-center justify-between px-6 lg:px-8 py-3.5 border-b border-border/80 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
+          <div className="flex items-center gap-2 text-xs text-slate-400">
+            <span className="font-semibold text-slate-700 dark:text-slate-300 capitalize">
+              {currentTab === 'admin' ? 'Life Admin' : currentTab}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setIsQuickAddOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 text-xs text-slate-400 bg-slate-100/80 dark:bg-slate-800/60 rounded-xl hover:bg-slate-200/60 dark:hover:bg-slate-700/60 transition-colors"
+            >
+              <Search className="w-3.5 h-3.5" />
+              <span>Search or capture... (Cmd+K)</span>
+            </button>
+
             <button
               type="button"
               onClick={toggleTheme}
@@ -105,10 +132,11 @@ export function AppShell({ children }: AppShellProps) {
           </div>
         </header>
 
-        {/* Page Content */}
-        <main className="flex-1 px-4 sm:px-6 md:px-8 py-5 md:py-8 max-w-6xl w-full mx-auto">
+        {/* Page Canvas */}
+        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-5 md:py-8 max-w-6xl w-full mx-auto">
           {children({
             currentTab,
+            setCurrentTab,
             userName,
             onOpenQuickAdd: () => setIsQuickAddOpen(true),
             isDark,
@@ -118,7 +146,7 @@ export function AppShell({ children }: AppShellProps) {
         </main>
       </div>
 
-      {/* Mobile Bottom Navigation (<768px) */}
+      {/* Mobile Bottom Navigation (< 768px) */}
       <MobileNav
         currentTab={currentTab === 'me' ? 'me' : 'today'}
         onTabChange={(tab) => setCurrentTab(tab)}
@@ -129,9 +157,7 @@ export function AppShell({ children }: AppShellProps) {
       <QuickAddModal
         isOpen={isQuickAddOpen}
         onClose={() => setIsQuickAddOpen(false)}
-        onSuccess={() => {
-          // Handled via event listener
-        }}
+        onSuccess={() => {}}
       />
     </div>
   );
