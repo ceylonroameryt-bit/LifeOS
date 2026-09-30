@@ -14,6 +14,7 @@ import { UpcomingCard } from '@/components/today/UpcomingCard';
 import { IdeaCard } from '@/components/today/IdeaCard';
 import { WeeklySummaryCard } from '@/components/today/WeeklySummaryCard';
 import { MeView } from '@/components/me/MeView';
+import { MoneyView } from '@/components/money/MoneyView';
 
 export default function HomePage() {
   const [tasks, setTasks] = useState<Task[]>(DEFAULT_TASKS);
@@ -62,6 +63,10 @@ export default function HomePage() {
         onToggleTheme,
         onUpdateName,
       }) => {
+        if (currentTab === 'money') {
+          return <MoneyView />;
+        }
+
         if (currentTab === 'me' || currentTab === 'settings') {
           return (
             <MeView
@@ -106,7 +111,7 @@ export default function HomePage() {
               <div className="md:col-span-5 space-y-4 md:space-y-5">
                 {/* Side-by-side Money & Habits on mobile, stacked on desktop */}
                 <div className="grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-5">
-                  <MoneyCard />
+                  <MoneyCard onClick={() => setCurrentTab('money')} />
                   <HabitCard />
                 </div>
 

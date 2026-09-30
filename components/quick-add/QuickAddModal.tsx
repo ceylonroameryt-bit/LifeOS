@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { QuickAddType } from '@/types';
 import { AddTaskForm } from './AddTaskForm';
+import { AddExpenseForm } from './AddExpenseForm';
 import {
   CheckCircle2,
   Lightbulb,
@@ -138,6 +139,8 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
   const handleSelect = (type: QuickAddType) => {
     if (type === 'task') {
       setSelectedType('task');
+    } else if (type === 'expense') {
+      setSelectedType('expense');
     } else {
       setNotice(`${type.charAt(0).toUpperCase() + type.slice(1)} quick-entry ready in respective module.`);
       setTimeout(() => setNotice(null), 2500);
@@ -147,8 +150,11 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
   const handleNaturalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!naturalText.trim()) return;
-    // Route to task creation with parsed title
-    setSelectedType('task');
+    if (detectedType === 'Expense') {
+      setSelectedType('expense');
+    } else {
+      setSelectedType('task');
+    }
   };
 
   return (
@@ -164,6 +170,12 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
         {selectedType === 'task' ? (
           <AddTaskForm
             initialTitle={naturalText}
+            onClose={onClose}
+            onSuccess={onSuccess}
+          />
+        ) : selectedType === 'expense' ? (
+          <AddExpenseForm
+            initialDescription={naturalText}
             onClose={onClose}
             onSuccess={onSuccess}
           />
