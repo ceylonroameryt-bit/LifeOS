@@ -1,3 +1,9 @@
+# Next.js
+.next/
+node_modules/
+*.tsbuildinfo
+.env*.local
+
 # Xcode
 .DS_Store
 */build/*
@@ -24,3 +30,4 @@ Package.resolved
 *.nib
 *.swp
 *.bak
+node_modules
