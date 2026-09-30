@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/client';
 
 const LOCAL_STORAGE_KEY = 'lifeos_tasks_store';
 
-const DEFAULT_TASKS: Task[] = [
+export const DEFAULT_TASKS: Task[] = [
   {
     id: 'task-1',
     user_id: 'guest',

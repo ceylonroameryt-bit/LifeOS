@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Task } from '@/types';
-import { taskService } from '@/lib/services/taskService';
+import { taskService, DEFAULT_TASKS } from '@/lib/services/taskService';
 import { getGreeting, formatHeaderDate, formatMobileDate } from '@/lib/dates';
 import { AppShell } from '@/components/layout/AppShell';
 import { TodayTasks } from '@/components/today/TodayTasks';
@@ -13,8 +13,8 @@ import { WeeklySummaryCard } from '@/components/today/WeeklySummaryCard';
 import { MeView } from '@/components/me/MeView';
 
 export default function HomePage() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [tasks, setTasks] = useState<Task[]>(DEFAULT_TASKS);
+  const [loading, setLoading] = useState(false);
 
   const loadTasks = useCallback(async () => {
     try {
@@ -22,8 +22,6 @@ export default function HomePage() {
       setTasks(data);
     } catch (err) {
       console.error('Failed to load tasks:', err);
-    } finally {
-      setLoading(false);
     }
   }, []);
 
@@ -81,31 +79,10 @@ export default function HomePage() {
               </p>
             </div>
 
-            {/* Responsive Main Layout */}
-            {/* 1. Mobile Layout (< 768px): Vertical flow with side-by-side cards */}
-            <div className="block md:hidden space-y-5">
-              <TodayTasks
-                tasks={tasks}
-                loading={loading}
-                onToggleTask={handleToggleTask}
-                onDeleteTask={handleDeleteTask}
-                onOpenQuickAdd={onOpenQuickAdd}
-              />
-
-              {/* Side-by-side Money & Habits on Mobile */}
-              <div className="grid grid-cols-2 gap-3">
-                <MoneyCard />
-                <HabitCard />
-              </div>
-
-              {/* Recent Idea on Mobile */}
-              <IdeaCard />
-            </div>
-
-            {/* 2. Tablet & Desktop Layout (>= 768px): 2-Column Responsive Dashboard */}
-            <div className="hidden md:grid md:grid-cols-12 gap-6 items-start">
-              {/* Left Column: Today Tasks + This Week Summary */}
-              <div className="md:col-span-7 space-y-6">
+            {/* Unified Responsive Grid (Mobile single-column with side-by-side cards / Desktop 2-column) */}
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-5 md:gap-6 items-start">
+              {/* Left Column (Desktop 7 cols, Mobile full width) */}
+              <div className="md:col-span-7 space-y-5 md:space-y-6">
                 <TodayTasks
                   tasks={tasks}
                   loading={loading}
@@ -117,10 +94,15 @@ export default function HomePage() {
                 <WeeklySummaryCard />
               </div>
 
-              {/* Right Column: Money, Habits, Ideas */}
-              <div className="md:col-span-5 space-y-5">
-                <MoneyCard />
-                <HabitCard />
+              {/* Right Column (Desktop 5 cols, Mobile cards underneath) */}
+              <div className="md:col-span-5 space-y-4 md:space-y-5">
+                {/* On mobile (<768px), Money and Habits sit side-by-side in 2 cols */}
+                <div className="grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-5">
+                  <MoneyCard />
+                  <HabitCard />
+                </div>
+
+                {/* Ideas Card */}
                 <IdeaCard />
               </div>
             </div>
