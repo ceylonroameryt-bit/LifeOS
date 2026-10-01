@@ -1,3 +1,5 @@
+> Historical product specification. See [README.md](README.md) for the current implementation, validation commands, deployment requirements, and limitations.
+
 # LifeOS — Database Schema & Data Architecture
 
 All tables use PostgreSQL 15+ hosted on Supabase, enforcing strict **Row Level Security (RLS)** with `user_id = auth.uid()`. Monetary values use `NUMERIC(12,2)` to guarantee penny-level decimal precision.

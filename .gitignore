@@ -31,3 +31,7 @@ Package.resolved
 *.swp
 *.bak
 node_modules
+
+coverage/
+playwright-report/
+test-results/

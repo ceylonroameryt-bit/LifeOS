@@ -1,3 +1,5 @@
+> Historical product specification. See [README.md](README.md) for the current implementation, validation commands, deployment requirements, and limitations.
+
 # LifeOS — System Architecture & Technical Specifications
 
 > **Core Philosophy**: Open → Understand my day in 5 seconds → Add something in 3 seconds → Do what matters → Close.

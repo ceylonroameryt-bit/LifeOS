@@ -1,3 +1,5 @@
+> Historical product specification. See [README.md](README.md) for the current implementation, validation commands, deployment requirements, and limitations.
+
 # LifeOS — Phased Implementation Plan & Verification Matrix
 
 ---
