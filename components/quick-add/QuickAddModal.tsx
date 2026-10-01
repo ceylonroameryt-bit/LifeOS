@@ -4,6 +4,12 @@ import React, { useState, useEffect } from 'react';
 import { QuickAddType } from '@/types';
 import { AddTaskForm } from './AddTaskForm';
 import { AddExpenseForm } from './AddExpenseForm';
+import { AddHabitForm } from './AddHabitForm';
+import { AddIdeaForm } from './AddIdeaForm';
+import { AddJobForm } from './AddJobForm';
+import { AddGoalForm } from './AddGoalForm';
+import { AddWishlistForm } from './AddWishlistForm';
+import { AddNoteForm } from './AddNoteForm';
 import {
   CheckCircle2,
   Lightbulb,
@@ -29,8 +35,7 @@ interface QuickAddModalProps {
 export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps) {
   const [selectedType, setSelectedType] = useState<QuickAddType | null>(null);
   const [naturalText, setNaturalText] = useState('');
-  const [detectedType, setDetectedType] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [detectedType, setDetectedType] = useState<QuickAddType | null>(null);
 
   // Keyboard shortcut listener (Cmd+K / Ctrl+K)
   useEffect(() => {
@@ -51,25 +56,60 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Real-time smart capture intent detection
+  // Deterministic Smart Capture intent detection (Section 16 of specifications)
   useEffect(() => {
     const lower = naturalText.toLowerCase().trim();
     if (!lower) {
       setDetectedType(null);
       return;
     }
-    if (lower.includes('£') || lower.includes('$') || lower.includes('tesco') || /\b\d+(\.\d{1,2})?\b/.test(lower) && (lower.includes('paid') || lower.includes('spent') || lower.includes('cost') || lower.includes('monthly'))) {
-      setDetectedType('Expense');
-    } else if (lower.startsWith('idea') || lower.includes('podcast') || lower.includes('video') || lower.includes('build tool')) {
-      setDetectedType('Idea');
-    } else if (lower.includes('job') || lower.includes('security') || lower.includes('interview') || lower.includes('recruiter') || lower.includes('analyst')) {
-      setDetectedType('Career Job');
-    } else if (lower.includes('habit') || lower.includes('slipped') || lower.includes('resisted') || lower.includes('streak')) {
-      setDetectedType('Habit');
-    } else if (lower.includes('wishlist') || lower.includes('buy') || lower.includes('lens')) {
-      setDetectedType('Wishlist');
+    if (
+      lower.includes('£') ||
+      lower.includes('$') ||
+      lower.includes('tesco') ||
+      (/\b\d+(\.\d{1,2})?\b/.test(lower) &&
+        (lower.includes('paid') ||
+          lower.includes('spent') ||
+          lower.includes('cost') ||
+          lower.includes('monthly')))
+    ) {
+      setDetectedType('expense');
+    } else if (
+      lower.startsWith('idea') ||
+      lower.includes('podcast') ||
+      lower.includes('video') ||
+      lower.includes('build tool')
+    ) {
+      setDetectedType('idea');
+    } else if (
+      lower.includes('job') ||
+      lower.includes('security') ||
+      lower.includes('interview') ||
+      lower.includes('recruiter') ||
+      lower.includes('analyst') ||
+      lower.includes('engineer')
+    ) {
+      setDetectedType('job');
+    } else if (
+      lower.includes('habit') ||
+      lower.includes('slipped') ||
+      lower.includes('resisted') ||
+      lower.includes('streak')
+    ) {
+      setDetectedType('habit');
+    } else if (
+      lower.includes('wishlist') ||
+      lower.includes('buy') ||
+      lower.includes('lens') ||
+      lower.includes('camera')
+    ) {
+      setDetectedType('wishlist');
+    } else if (lower.startsWith('goal') || lower.includes('target') || lower.includes('save £')) {
+      setDetectedType('goal');
+    } else if (lower.startsWith('note') || lower.includes('remember')) {
+      setDetectedType('note');
     } else {
-      setDetectedType('Task');
+      setDetectedType('task');
     }
   }, [naturalText]);
 
@@ -79,7 +119,6 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
       setSelectedType(null);
       setNaturalText('');
       setDetectedType(null);
-      setNotice(null);
     }
   }, [isOpen]);
 
@@ -137,24 +176,13 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
   ];
 
   const handleSelect = (type: QuickAddType) => {
-    if (type === 'task') {
-      setSelectedType('task');
-    } else if (type === 'expense') {
-      setSelectedType('expense');
-    } else {
-      setNotice(`${type.charAt(0).toUpperCase() + type.slice(1)} quick-entry ready in respective module.`);
-      setTimeout(() => setNotice(null), 2500);
-    }
+    setSelectedType(type);
   };
 
   const handleNaturalSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!naturalText.trim()) return;
-    if (detectedType === 'Expense') {
-      setSelectedType('expense');
-    } else {
-      setSelectedType('task');
-    }
+    setSelectedType(detectedType || 'task');
   };
 
   return (
@@ -176,6 +204,42 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
         ) : selectedType === 'expense' ? (
           <AddExpenseForm
             initialDescription={naturalText}
+            onClose={onClose}
+            onSuccess={onSuccess}
+          />
+        ) : selectedType === 'job' ? (
+          <AddJobForm
+            initialTitle={naturalText}
+            onClose={onClose}
+            onSuccess={onSuccess}
+          />
+        ) : selectedType === 'habit' ? (
+          <AddHabitForm
+            initialTitle={naturalText}
+            onClose={onClose}
+            onSuccess={onSuccess}
+          />
+        ) : selectedType === 'idea' ? (
+          <AddIdeaForm
+            initialTitle={naturalText}
+            onClose={onClose}
+            onSuccess={onSuccess}
+          />
+        ) : selectedType === 'goal' ? (
+          <AddGoalForm
+            initialTitle={naturalText}
+            onClose={onClose}
+            onSuccess={onSuccess}
+          />
+        ) : selectedType === 'wishlist' ? (
+          <AddWishlistForm
+            initialTitle={naturalText}
+            onClose={onClose}
+            onSuccess={onSuccess}
+          />
+        ) : selectedType === 'note' ? (
+          <AddNoteForm
+            initialTitle={naturalText}
             onClose={onClose}
             onSuccess={onSuccess}
           />
@@ -203,14 +267,7 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
               </button>
             </div>
 
-            {/* Notice pill */}
-            {notice && (
-              <div className="mb-4 px-3 py-2 text-xs font-semibold text-center text-primary bg-blue-50 dark:bg-blue-950/60 rounded-xl border border-blue-200/60 animate-in fade-in">
-                {notice}
-              </div>
-            )}
-
-            {/* 2-Column Action Tiles (8 tiles) */}
+            {/* 2-Column Action Tiles (8 tiles: Task, Expense, Idea, Habit, Job, Note, Goal, Wishlist) */}
             <div className="grid grid-cols-2 gap-2.5 mb-5">
               {actions.map((act) => {
                 const Icon = act.icon;
@@ -247,7 +304,7 @@ export function QuickAddModal({ isOpen, onClose, onSuccess }: QuickAddModalProps
                   className="flex-1 bg-transparent text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none"
                 />
                 {detectedType && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-primary animate-in fade-in flex items-center gap-1">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-primary animate-in fade-in flex items-center gap-1 uppercase">
                     {detectedType}
                     <ArrowRight className="w-2.5 h-2.5" />
                   </span>

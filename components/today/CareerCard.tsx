@@ -2,11 +2,18 @@
 
 import React from 'react';
 import { LifeCard } from '@/components/ui/LifeCard';
-import { Briefcase, Calendar, Clock, ChevronRight } from 'lucide-react';
+import { Briefcase, Clock, ChevronRight } from 'lucide-react';
 
-export function CareerCard() {
+interface CareerCardProps {
+  onClick?: () => void;
+}
+
+export function CareerCard({ onClick }: CareerCardProps) {
   return (
-    <LifeCard className="p-5 flex flex-col justify-between">
+    <LifeCard
+      onClick={onClick}
+      className="p-5 flex flex-col justify-between cursor-pointer hover:border-primary/40 transition-all select-none group"
+    >
       <div>
         <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3">
           <span className="flex items-center gap-1.5">
@@ -46,7 +53,7 @@ export function CareerCard() {
               XYZ Ltd
             </p>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Applied 6 days ago • Recruiter: Alex
+              Applied 6 days ago • Recruiter: David Clark
             </p>
           </div>
         </div>
@@ -54,7 +61,7 @@ export function CareerCard() {
 
       <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
         <span>Job Applications & Pipeline</span>
-        <span className="inline-flex items-center text-primary hover:underline">
+        <span className="inline-flex items-center text-primary group-hover:translate-x-0.5 transition-transform font-semibold">
           Career <ChevronRight className="w-3.5 h-3.5 ml-0.5" />
         </span>
       </div>

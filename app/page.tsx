@@ -13,8 +13,20 @@ import { CareerCard } from '@/components/today/CareerCard';
 import { UpcomingCard } from '@/components/today/UpcomingCard';
 import { IdeaCard } from '@/components/today/IdeaCard';
 import { WeeklySummaryCard } from '@/components/today/WeeklySummaryCard';
-import { MeView } from '@/components/me/MeView';
+import { TasksView } from '@/components/tasks/TasksView';
 import { MoneyView } from '@/components/money/MoneyView';
+import { HabitsView } from '@/components/habits/HabitsView';
+import { CareerView } from '@/components/career/CareerView';
+import { IdeasView } from '@/components/ideas/IdeasView';
+import { GoalsView } from '@/components/goals/GoalsView';
+import { WishlistView } from '@/components/wishlist/WishlistView';
+import { AdminView } from '@/components/admin/AdminView';
+import { CalendarView } from '@/components/calendar/CalendarView';
+import { InboxView } from '@/components/inbox/InboxView';
+import { FocusView } from '@/components/focus/FocusView';
+import { InsightsView } from '@/components/insights/InsightsView';
+import { WeeklyReviewView } from '@/components/review/WeeklyReviewView';
+import { MeView } from '@/components/me/MeView';
 
 export default function HomePage() {
   const [tasks, setTasks] = useState<Task[]>(DEFAULT_TASKS);
@@ -50,7 +62,7 @@ export default function HomePage() {
   };
 
   const greeting = getGreeting();
-  const headerDate = formatHeaderDate(); // e.g. "Wednesday, 30 September 2026"
+  const headerDate = formatHeaderDate(); // e.g. "Wednesday, 30 September"
 
   return (
     <AppShell>
@@ -63,8 +75,56 @@ export default function HomePage() {
         onToggleTheme,
         onUpdateName,
       }) => {
+        if (currentTab === 'tasks') {
+          return <TasksView onOpenQuickAdd={onOpenQuickAdd} />;
+        }
+
         if (currentTab === 'money') {
           return <MoneyView />;
+        }
+
+        if (currentTab === 'habits') {
+          return <HabitsView />;
+        }
+
+        if (currentTab === 'career') {
+          return <CareerView />;
+        }
+
+        if (currentTab === 'ideas') {
+          return <IdeasView />;
+        }
+
+        if (currentTab === 'goals') {
+          return <GoalsView />;
+        }
+
+        if (currentTab === 'wishlist') {
+          return <WishlistView />;
+        }
+
+        if (currentTab === 'admin') {
+          return <AdminView />;
+        }
+
+        if (currentTab === 'calendar') {
+          return <CalendarView />;
+        }
+
+        if (currentTab === 'inbox') {
+          return <InboxView />;
+        }
+
+        if (currentTab === 'focus') {
+          return <FocusView />;
+        }
+
+        if (currentTab === 'insights') {
+          return <InsightsView />;
+        }
+
+        if (currentTab === 'weekly-review') {
+          return <WeeklyReviewView />;
         }
 
         if (currentTab === 'me' || currentTab === 'settings') {
@@ -74,10 +134,12 @@ export default function HomePage() {
               onUpdateName={onUpdateName}
               isDark={isDark}
               onToggleTheme={onToggleTheme}
+              onNavigateTab={setCurrentTab}
             />
           );
         }
 
+        // Default: Today Command Center Dashboard
         return (
           <div className="space-y-6 md:space-y-7 pb-24 md:pb-12 animate-in fade-in duration-300">
             {/* Hero Greeting Section with subtle sunrise elements */}
@@ -101,10 +163,10 @@ export default function HomePage() {
                 />
 
                 {/* 2. Career Card */}
-                <CareerCard />
+                <CareerCard onClick={() => setCurrentTab('career')} />
 
                 {/* 3. This Week Summary */}
-                <WeeklySummaryCard />
+                <WeeklySummaryCard onClick={() => setCurrentTab('weekly-review')} />
               </div>
 
               {/* Right Column (Desktop 5 cols / Mobile sequential flow) */}
@@ -112,14 +174,14 @@ export default function HomePage() {
                 {/* Side-by-side Money & Habits on mobile, stacked on desktop */}
                 <div className="grid grid-cols-2 md:grid-cols-1 gap-3 md:gap-5">
                   <MoneyCard onClick={() => setCurrentTab('money')} />
-                  <HabitCard />
+                  <HabitCard onClick={() => setCurrentTab('habits')} />
                 </div>
 
                 {/* Upcoming Card (Life Admin & Renewals) */}
-                <UpcomingCard />
+                <UpcomingCard onClick={() => setCurrentTab('admin')} />
 
                 {/* Ideas Card */}
-                <IdeaCard />
+                <IdeaCard onClick={() => setCurrentTab('ideas')} />
               </div>
             </div>
           </div>
