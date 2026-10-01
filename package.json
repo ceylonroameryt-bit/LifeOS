@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "eslint app components lib types middleware.ts --max-warnings=0",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@supabase/ssr": "^0.5.1",
@@ -14,19 +17,34 @@
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
     "lucide-react": "^0.453.0",
-    "next": "14.2.15",
+    "next": "^15.5.24",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tailwind-merge": "^2.5.4",
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
+    "@playwright/test": "^1.63.0",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
     "@types/node": "^20.17.0",
     "@types/react": "^18.3.11",
     "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^6.1.1",
     "autoprefixer": "^10.4.20",
-    "postcss": "^8.4.47",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^15.5.24",
+    "fake-indexeddb": "^6.2.5",
+    "jsdom": "^29.1.1",
+    "postcss": "^8.5.23",
+    "prettier": "^3.9.9",
     "tailwindcss": "^3.4.14",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "postcss": "$postcss"
   }
 }
