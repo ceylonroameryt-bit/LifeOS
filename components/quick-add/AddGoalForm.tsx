@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Goal } from '@/types';
-import { goalService } from '@/lib/services/goalService';
+import React, { useState } from "react";
+import { Goal } from "@/types";
+import { goalService } from "@/lib/services/goalService";
 
 interface AddGoalFormProps {
   onClose: () => void;
@@ -10,17 +10,23 @@ interface AddGoalFormProps {
   initialTitle?: string;
 }
 
-export function AddGoalForm({ onClose, onSuccess, initialTitle = '' }: AddGoalFormProps) {
+export function AddGoalForm({
+  onClose,
+  onSuccess,
+  initialTitle = "",
+}: AddGoalFormProps) {
   const [title, setTitle] = useState(initialTitle);
-  const [category, setCategory] = useState<Goal['category']>('Career');
-  const [targetValue, setTargetValue] = useState('');
-  const [nextAction, setNextAction] = useState('');
+  const [error, setError] = useState("");
+  const [category, setCategory] = useState<Goal["category"]>("Career");
+  const [targetValue, setTargetValue] = useState("");
+  const [nextAction, setNextAction] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!title.trim() || isSubmitting) return;
 
+    setError("");
     setIsSubmitting(true);
     try {
       await goalService.createGoal({
@@ -32,7 +38,10 @@ export function AddGoalForm({ onClose, onSuccess, initialTitle = '' }: AddGoalFo
       onSuccess();
       onClose();
     } catch (err) {
-      console.error('Failed to create goal:', err);
+      setError(
+        err instanceof Error ? err.message : "Save failed. Please retry.",
+      );
+      console.error("Failed to create goal:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -40,6 +49,11 @@ export function AddGoalForm({ onClose, onSuccess, initialTitle = '' }: AddGoalFo
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col bg-card w-full">
+      {error && (
+        <p role="alert" className="px-6 py-2 text-sm text-danger">
+          {error}
+        </p>
+      )}
       {/* Top Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/80">
         <button
@@ -59,7 +73,7 @@ export function AddGoalForm({ onClose, onSuccess, initialTitle = '' }: AddGoalFo
           disabled={!title.trim() || isSubmitting}
           className="text-primary font-bold text-base hover:opacity-80 disabled:opacity-40 transition-opacity"
         >
-          {isSubmitting ? 'Saving...' : 'Save Goal'}
+          {isSubmitting ? "Saving..." : "Save Goal"}
         </button>
       </div>
 
@@ -91,7 +105,7 @@ export function AddGoalForm({ onClose, onSuccess, initialTitle = '' }: AddGoalFo
             </span>
             <select
               value={category}
-              onChange={(e) => setCategory(e.target.value as Goal['category'])}
+              onChange={(e) => setCategory(e.target.value as Goal["category"])}
               className="text-xs font-semibold text-primary bg-transparent focus:outline-none cursor-pointer"
             >
               <option value="Career">Career</option>

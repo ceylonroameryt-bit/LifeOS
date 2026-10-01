@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { ideaService } from '@/lib/services/ideaService';
+import React, { useState } from "react";
+import { ideaService } from "@/lib/services/ideaService";
 
 interface AddIdeaFormProps {
   onClose: () => void;
@@ -9,16 +9,22 @@ interface AddIdeaFormProps {
   initialTitle?: string;
 }
 
-export function AddIdeaForm({ onClose, onSuccess, initialTitle = '' }: AddIdeaFormProps) {
+export function AddIdeaForm({
+  onClose,
+  onSuccess,
+  initialTitle = "",
+}: AddIdeaFormProps) {
   const [title, setTitle] = useState(initialTitle);
-  const [content, setContent] = useState('');
-  const [category, setCategory] = useState('Cybersecurity');
+  const [error, setError] = useState("");
+  const [content, setContent] = useState("");
+  const [category, setCategory] = useState("Cybersecurity");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!title.trim() || isSubmitting) return;
 
+    setError("");
     setIsSubmitting(true);
     try {
       await ideaService.createIdea({
@@ -29,7 +35,10 @@ export function AddIdeaForm({ onClose, onSuccess, initialTitle = '' }: AddIdeaFo
       onSuccess();
       onClose();
     } catch (err) {
-      console.error('Failed to create idea:', err);
+      setError(
+        err instanceof Error ? err.message : "Save failed. Please retry.",
+      );
+      console.error("Failed to create idea:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -37,6 +46,11 @@ export function AddIdeaForm({ onClose, onSuccess, initialTitle = '' }: AddIdeaFo
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col bg-card w-full">
+      {error && (
+        <p role="alert" className="px-6 py-2 text-sm text-danger">
+          {error}
+        </p>
+      )}
       {/* Top Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/80">
         <button
@@ -56,7 +70,7 @@ export function AddIdeaForm({ onClose, onSuccess, initialTitle = '' }: AddIdeaFo
           disabled={!title.trim() || isSubmitting}
           className="text-primary font-bold text-base hover:opacity-80 disabled:opacity-40 transition-opacity"
         >
-          {isSubmitting ? 'Saving...' : 'Save Idea'}
+          {isSubmitting ? "Saving..." : "Save Idea"}
         </button>
       </div>
 

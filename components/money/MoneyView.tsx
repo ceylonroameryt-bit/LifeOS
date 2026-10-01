@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Expense } from '@/types';
-import { moneyService, DEFAULT_SUBSCRIPTIONS, DEFAULT_SAVINGS } from '@/lib/services/moneyService';
-import { LifeCard } from '@/components/ui/LifeCard';
-import { AddExpenseModal } from './AddExpenseModal';
+import React, { useState, useEffect, useCallback } from "react";
+import { Expense, Subscription, SavingsGoal } from "@/types";
+import { moneyService } from "@/lib/services/moneyService";
+import { LifeCard } from "@/components/ui/LifeCard";
+import { AddExpenseModal } from "./AddExpenseModal";
 import {
   CreditCard,
   Plus,
@@ -21,12 +21,13 @@ import {
   AlertTriangle,
   PiggyBank,
   CheckCircle2,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+} from "lucide-react";
+import { startOfWeek, startOfMonth, format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 export function MoneyView() {
-  const [period, setPeriod] = useState<'week' | 'month' | 'all'>('week');
-  const [budgetMode, setBudgetMode] = useState<'weekly' | 'monthly'>('weekly');
+  const [period, setPeriod] = useState<"week" | "month" | "all">("week");
+  const [budgetMode, setBudgetMode] = useState<"weekly" | "monthly">("weekly");
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
@@ -39,28 +40,61 @@ export function MoneyView() {
   useEffect(() => {
     loadData();
     const handleUpdate = () => loadData();
-    window.addEventListener('lifeos-expenses-updated', handleUpdate);
-    return () => window.removeEventListener('lifeos-expenses-updated', handleUpdate);
+    window.addEventListener("lifeos-expenses-updated", handleUpdate);
+    return () =>
+      window.removeEventListener("lifeos-expenses-updated", handleUpdate);
   }, [loadData]);
 
-  const budget = moneyService.getBudget(budgetMode);
-  const totalSpent = expenses.reduce((sum, e) => sum + e.amount, 0);
+  const [budget, setBudget] = useState(0);
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [savings, setSavings] = useState<SavingsGoal[]>([]);
+  useEffect(() => {
+    void Promise.all([
+      moneyService.getBudget(budgetMode),
+      moneyService.getSubscriptions(),
+      moneyService.getSavingsGoals(),
+    ]).then(([b, s, g]) => {
+      setBudget(b);
+      setSubscriptions(s);
+      setSavings(g);
+    });
+  }, [budgetMode]);
+  const start = format(
+    period === "week"
+      ? startOfWeek(new Date(), { weekStartsOn: 1 })
+      : startOfMonth(new Date()),
+    "yyyy-MM-dd",
+  );
+  const end = format(new Date(), "yyyy-MM-dd");
+  const filteredExpenses = expenses.filter(
+    (e) =>
+      period === "all" || (e.expense_date >= start && e.expense_date <= end),
+  );
+  const totalSpent = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
   const roundedSpent = Math.round(totalSpent * 100) / 100;
   const remaining = Math.round((budget - roundedSpent) * 100) / 100;
   const isOverspent = remaining < 0;
-  const percentage = Math.min(Math.round((roundedSpent / budget) * 100), 100);
+  const percentage =
+    budget > 0 ? Math.min(Math.round((roundedSpent / budget) * 100), 100) : 0;
 
-  const categories = moneyService.getCategoryBreakdown(expenses);
+  const categories = moneyService.getCategoryBreakdown(filteredExpenses);
 
   const getCategoryIcon = (name: string) => {
     switch (name) {
-      case 'Food': return <Utensils className="w-4 h-4 text-amber-500" />;
-      case 'Shopping': return <ShoppingBag className="w-4 h-4 text-blue-500" />;
-      case 'Transport': return <Car className="w-4 h-4 text-cyan-500" />;
-      case 'Entertainment': return <Film className="w-4 h-4 text-purple-500" />;
-      case 'Bills': return <Receipt className="w-4 h-4 text-rose-500" />;
-      case 'Subscriptions': return <RefreshCw className="w-4 h-4 text-emerald-500" />;
-      default: return <Tag className="w-4 h-4 text-slate-400" />;
+      case "Food":
+        return <Utensils className="w-4 h-4 text-amber-500" />;
+      case "Shopping":
+        return <ShoppingBag className="w-4 h-4 text-blue-500" />;
+      case "Transport":
+        return <Car className="w-4 h-4 text-cyan-500" />;
+      case "Entertainment":
+        return <Film className="w-4 h-4 text-purple-500" />;
+      case "Bills":
+        return <Receipt className="w-4 h-4 text-rose-500" />;
+      case "Subscriptions":
+        return <RefreshCw className="w-4 h-4 text-emerald-500" />;
+      default:
+        return <Tag className="w-4 h-4 text-slate-400" />;
     }
   };
 
@@ -79,19 +113,27 @@ export function MoneyView() {
 
         {/* Time Period Tabs */}
         <div className="flex items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl self-start sm:self-auto">
-          {(['week', 'month', 'all'] as const).map((tab) => (
+          {(["week", "month", "all"] as const).map((tab) => (
             <button
               key={tab}
               type="button"
-              onClick={() => setPeriod(tab)}
+              onClick={() => {
+                setPeriod(tab);
+                if (tab !== "all")
+                  setBudgetMode(tab === "week" ? "weekly" : "monthly");
+              }}
               className={cn(
-                'px-3 py-1.5 text-xs font-semibold rounded-lg capitalize transition-all',
+                "px-3 py-1.5 text-xs font-semibold rounded-lg capitalize transition-all",
                 period === tab
-                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-2xs'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                  ? "bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-2xs"
+                  : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200",
               )}
             >
-              {tab === 'week' ? 'This Week' : tab === 'month' ? 'This Month' : 'All Time'}
+              {tab === "week"
+                ? "This Week"
+                : tab === "month"
+                  ? "This Month"
+                  : "All Time"}
             </button>
           ))}
         </div>
@@ -107,10 +149,13 @@ export function MoneyView() {
               </span>
               <button
                 type="button"
-                onClick={() => setBudgetMode(budgetMode === 'weekly' ? 'monthly' : 'weekly')}
+                onClick={() => {
+                  setBudgetMode(budgetMode === "weekly" ? "monthly" : "weekly");
+                  setPeriod(budgetMode === "weekly" ? "month" : "week");
+                }}
                 className="text-[11px] font-medium text-primary hover:underline"
               >
-                (Switch to {budgetMode === 'weekly' ? 'Monthly' : 'Weekly'})
+                (Switch to {budgetMode === "weekly" ? "Monthly" : "Weekly"})
               </button>
             </div>
 
@@ -120,18 +165,20 @@ export function MoneyView() {
               </span>
               <span
                 className={cn(
-                  'text-sm font-semibold',
+                  "text-sm font-semibold",
                   isOverspent
-                    ? 'text-danger dark:text-danger'
-                    : 'text-success dark:text-success'
+                    ? "text-danger dark:text-danger"
+                    : "text-success dark:text-success",
                 )}
               >
-                {isOverspent ? 'over budget' : 'left'}
+                {isOverspent ? "over budget" : "left"}
               </span>
             </div>
 
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              £{roundedSpent.toFixed(0)} spent of £{budget} {budgetMode === 'weekly' ? 'this week' : 'this month'} • {percentage}% spent
+              £{roundedSpent.toFixed(0)} spent of £{budget}{" "}
+              {budgetMode === "weekly" ? "this week" : "this month"} •{" "}
+              {percentage}% spent
             </p>
           </div>
 
@@ -149,14 +196,44 @@ export function MoneyView() {
         <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-3 overflow-hidden">
           <div
             className={cn(
-              'h-3 rounded-full transition-all duration-500',
-              isOverspent ? 'bg-danger' : percentage > 85 ? 'bg-warning' : 'bg-success'
+              "h-3 rounded-full transition-all duration-500",
+              isOverspent
+                ? "bg-danger"
+                : percentage > 85
+                  ? "bg-warning"
+                  : "bg-success",
             )}
             style={{ width: `${percentage}%` }}
           />
         </div>
       </LifeCard>
 
+      <details className="text-sm">
+        <summary className="text-primary cursor-pointer">
+          Edit {budgetMode} budget
+        </summary>
+        <form
+          className="flex gap-2 mt-2"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const amount = Number(new FormData(e.currentTarget).get("amount"));
+            await moneyService.setBudget(amount, budgetMode);
+            setBudget(amount);
+          }}
+        >
+          <input
+            aria-label="Budget amount"
+            name="amount"
+            type="number"
+            min="0"
+            step="0.01"
+            required
+            defaultValue={budget}
+            className="bg-surface border rounded-xl p-2"
+          />
+          <button className="text-primary">Save budget</button>
+        </form>
+      </details>
       {/* Spending Breakdown by Category */}
       <div className="space-y-3">
         <div className="flex items-center justify-between px-1">
@@ -171,13 +248,17 @@ export function MoneyView() {
         <LifeCard className="divide-y divide-slate-100 dark:divide-slate-800/80 p-0 overflow-hidden">
           {categories.map((cat) => {
             const isExpanded = expandedCategory === cat.category;
-            const categoryExpenses = expenses.filter((e) => e.category === cat.category);
+            const categoryExpenses = filteredExpenses.filter(
+              (e) => e.category === cat.category,
+            );
 
             return (
               <div key={cat.category} className="transition-colors">
                 <button
                   type="button"
-                  onClick={() => setExpandedCategory(isExpanded ? null : cat.category)}
+                  onClick={() =>
+                    setExpandedCategory(isExpanded ? null : cat.category)
+                  }
                   className="w-full flex items-center justify-between p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 text-left transition-colors"
                 >
                   <div className="flex items-center gap-3.5">
@@ -189,7 +270,8 @@ export function MoneyView() {
                         {cat.category}
                       </p>
                       <p className="text-xs text-slate-400">
-                        {cat.count} {cat.count === 1 ? 'transaction' : 'transactions'}
+                        {cat.count}{" "}
+                        {cat.count === 1 ? "transaction" : "transactions"}
                       </p>
                     </div>
                   </div>
@@ -241,13 +323,24 @@ export function MoneyView() {
                 SUBSCRIPTIONS
               </span>
               <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                £69.99/mo
+                £
+                {subscriptions
+                  .reduce(
+                    (sum, s) =>
+                      sum + s.amount / (s.billing_cycle === "yearly" ? 12 : 1),
+                    0,
+                  )
+                  .toFixed(2)}
+                /mo
               </span>
             </div>
 
             <div className="space-y-2.5">
-              {DEFAULT_SUBSCRIPTIONS.map((sub) => (
-                <div key={sub.id} className="flex items-center justify-between text-sm py-1">
+              {subscriptions.map((sub) => (
+                <div
+                  key={sub.id}
+                  className="flex items-center justify-between text-sm py-1"
+                >
                   <div>
                     <span className="font-medium text-slate-800 dark:text-slate-200">
                       {sub.name}
@@ -257,7 +350,7 @@ export function MoneyView() {
                     </p>
                   </div>
                   <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                    £{sub.cost.toFixed(2)}
+                    £{sub.amount.toFixed(2)}
                   </span>
                 </div>
               ))}
@@ -273,12 +366,16 @@ export function MoneyView() {
                 <PiggyBank className="w-3.5 h-3.5 text-success" />
                 SAVINGS GOALS
               </span>
-              <span className="text-xs text-slate-400">2 active</span>
+              <span className="text-xs text-slate-400">
+                {savings.length} active
+              </span>
             </div>
 
             <div className="space-y-3">
-              {DEFAULT_SAVINGS.map((sav) => {
-                const pct = Math.round((sav.current_amount / sav.target_amount) * 100);
+              {savings.map((sav) => {
+                const pct = Math.round(
+                  (sav.current_amount / sav.target_amount) * 100,
+                );
                 return (
                   <div key={sav.id} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">

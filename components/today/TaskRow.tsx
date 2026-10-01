@@ -1,32 +1,34 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Task } from '@/types';
-import { Check, Clock, Trash2, AlertCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useState } from "react";
+import { Task } from "@/types";
+import { Check, Clock, Trash2, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface TaskRowProps {
   task: Task;
   onToggle: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => void | Promise<void>;
 }
 
 export function TaskRow({ task, onToggle, onDelete }: TaskRowProps) {
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = (e: React.MouseEvent) => {
+  const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setIsDeleting(true);
-    setTimeout(() => {
-      onDelete(task.id);
-    }, 150);
+    try {
+      await onDelete(task.id);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
     <div
       className={cn(
-        'group flex items-start justify-between py-3.5 px-3 rounded-xl transition-all duration-200 select-none hover:bg-slate-50/70 dark:hover:bg-slate-800/40',
-        isDeleting && 'opacity-0 scale-95'
+        "group flex items-start justify-between py-3.5 px-3 rounded-xl transition-all duration-200 select-none hover:bg-slate-50/70 dark:hover:bg-slate-800/40",
+        isDeleting && "opacity-0 scale-95",
       )}
     >
       <div className="flex items-start gap-3.5 flex-1 min-w-0">
@@ -34,18 +36,18 @@ export function TaskRow({ task, onToggle, onDelete }: TaskRowProps) {
         <button
           type="button"
           onClick={() => onToggle(task.id)}
-          aria-label={task.completed ? 'Mark incomplete' : 'Mark complete'}
+          aria-label={task.completed ? "Mark incomplete" : "Mark complete"}
           className={cn(
-            'mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 focus:outline-none flex-shrink-0',
+            "mt-0.5 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-200 focus:outline-none flex-shrink-0",
             task.completed
-              ? 'bg-emerald-500 border-emerald-500 text-white scale-100'
-              : 'border-slate-300 dark:border-slate-600 hover:border-blue-500 dark:hover:border-blue-400 bg-transparent'
+              ? "bg-emerald-500 border-emerald-500 text-white scale-100"
+              : "border-slate-300 dark:border-slate-600 hover:border-blue-500 dark:hover:border-blue-400 bg-transparent",
           )}
         >
           <Check
             className={cn(
-              'w-3.5 h-3.5 stroke-[3] transition-transform duration-200',
-              task.completed ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
+              "w-3.5 h-3.5 stroke-[3] transition-transform duration-200",
+              task.completed ? "scale-100 opacity-100" : "scale-0 opacity-0",
             )}
           />
         </button>
@@ -55,16 +57,16 @@ export function TaskRow({ task, onToggle, onDelete }: TaskRowProps) {
           <div className="flex items-center gap-2">
             <span
               className={cn(
-                'text-[15px] font-medium transition-all duration-200 leading-snug break-words',
+                "text-[15px] font-medium transition-all duration-200 leading-snug break-words",
                 task.completed
-                  ? 'text-slate-400 dark:text-slate-500 line-through'
-                  : 'text-slate-900 dark:text-slate-100'
+                  ? "text-slate-400 dark:text-slate-500 line-through"
+                  : "text-slate-900 dark:text-slate-100",
               )}
             >
               {task.title}
             </span>
 
-            {task.priority === 'Important' && !task.completed && (
+            {task.priority === "Important" && !task.completed && (
               <span
                 className="inline-flex items-center text-amber-500 dark:text-amber-400 flex-shrink-0"
                 title="Important"

@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Priority } from '@/types';
-import { taskService } from '@/lib/services/taskService';
-import { Clock } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useState } from "react";
+import { Priority } from "@/types";
+import { taskService } from "@/lib/services/taskService";
+import { Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface AddTaskFormProps {
   onClose: () => void;
@@ -12,12 +12,17 @@ interface AddTaskFormProps {
   initialTitle?: string;
 }
 
-export function AddTaskForm({ onClose, onSuccess, initialTitle = '' }: AddTaskFormProps) {
+export function AddTaskForm({
+  onClose,
+  onSuccess,
+  initialTitle = "",
+}: AddTaskFormProps) {
   const [title, setTitle] = useState(initialTitle);
-  const [notes, setNotes] = useState('');
-  const [dueTime, setDueTime] = useState('06:00 PM');
+  const [error, setError] = useState("");
+  const [notes, setNotes] = useState("");
+  const [dueTime, setDueTime] = useState("06:00 PM");
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [priority, setPriority] = useState<Priority>('Normal');
+  const [priority, setPriority] = useState<Priority>("Normal");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -25,6 +30,7 @@ export function AddTaskForm({ onClose, onSuccess, initialTitle = '' }: AddTaskFo
     const trimmed = title.trim();
     if (!trimmed || isSubmitting) return;
 
+    setError("");
     setIsSubmitting(true);
     try {
       await taskService.createTask({
@@ -36,7 +42,10 @@ export function AddTaskForm({ onClose, onSuccess, initialTitle = '' }: AddTaskFo
       onSuccess();
       onClose();
     } catch (err) {
-      console.error('Failed to create task:', err);
+      setError(
+        err instanceof Error ? err.message : "Save failed. Please retry.",
+      );
+      console.error("Failed to create task:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -44,6 +53,11 @@ export function AddTaskForm({ onClose, onSuccess, initialTitle = '' }: AddTaskFo
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col bg-card w-full">
+      {error && (
+        <p role="alert" className="px-6 py-2 text-sm text-danger">
+          {error}
+        </p>
+      )}
       {/* Top Header matching approved LifeOS UI */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/80">
         <button
@@ -63,7 +77,7 @@ export function AddTaskForm({ onClose, onSuccess, initialTitle = '' }: AddTaskFo
           disabled={!title.trim() || isSubmitting}
           className="text-primary font-bold text-base hover:opacity-80 disabled:opacity-40 transition-opacity"
         >
-          {isSubmitting ? 'Saving...' : 'Save Task'}
+          {isSubmitting ? "Saving..." : "Save Task"}
         </button>
       </div>
 
@@ -96,9 +110,7 @@ export function AddTaskForm({ onClose, onSuccess, initialTitle = '' }: AddTaskFo
             <span className="font-medium text-slate-800 dark:text-slate-200">
               Date
             </span>
-            <span className="font-semibold text-primary">
-              Today
-            </span>
+            <span className="font-semibold text-primary">Today</span>
           </div>
 
           {/* Time Row */}
@@ -136,16 +148,16 @@ export function AddTaskForm({ onClose, onSuccess, initialTitle = '' }: AddTaskFo
             PRIORITY
           </label>
           <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-800/70 p-1 rounded-xl">
-            {(['Low', 'Normal', 'Important'] as Priority[]).map((p) => (
+            {(["Low", "Normal", "Important"] as Priority[]).map((p) => (
               <button
                 key={p}
                 type="button"
                 onClick={() => setPriority(p)}
                 className={cn(
-                  'py-2 text-xs font-semibold rounded-lg transition-all',
+                  "py-2 text-xs font-semibold rounded-lg transition-all",
                   priority === p
-                    ? 'bg-surface text-slate-900 dark:text-slate-100 shadow-2xs font-bold'
-                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                    ? "bg-surface text-slate-900 dark:text-slate-100 shadow-2xs font-bold"
+                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200",
                 )}
               >
                 {p}

@@ -1,39 +1,103 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Play, Pause, RotateCcw, Check, Sparkles } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { activityService } from "@/lib/services/activityService";
+import React, { useState, useEffect } from "react";
+import { Play, Pause, RotateCcw, Check, Sparkles } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function FocusView() {
   const [duration, setDuration] = useState(25 * 60); // 25 minutes in seconds
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [isRunning, setIsRunning] = useState(false);
-  const [focusTask, setFocusTask] = useState('Work on SOC-AI parser');
+  const [focusTask, setFocusTask] = useState("");
 
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [endsAt, setEndsAt] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    void activityService.getFocusSessions().then((rows) => {
+      const row = rows.find((r) => r.status === "in_progress");
+      if (row) {
+        setSessionId(row.id);
+        setDuration(row.duration_minutes * 60);
+        setTimeLeft(
+          row.ends_at
+            ? Math.max(
+                0,
+                Math.ceil(
+                  (new Date(row.ends_at).getTime() - Date.now()) / 1000,
+                ),
+              )
+            : (row.remaining_seconds ?? row.duration_minutes * 60),
+        );
+        setEndsAt(row.ends_at ? new Date(row.ends_at).getTime() : null);
+        setIsRunning(!!row.ends_at);
+        setFocusTask(row.task_title || "");
+      }
+    });
+  }, []);
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
     if (isRunning && timeLeft > 0) {
       timer = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
+        setTimeLeft(
+          endsAt ? Math.max(0, Math.ceil((endsAt - Date.now()) / 1000)) : 0,
+        );
       }, 1000);
     } else if (timeLeft === 0 && isRunning) {
       setIsRunning(false);
+      if (sessionId)
+        void activityService
+          .updateFocus(sessionId, {
+            status: "completed",
+            completed_at: new Date().toISOString(),
+            remaining_seconds: 0,
+          })
+          .then(() => setSessionId(null));
     }
     return () => {
       if (timer) clearInterval(timer);
     };
-  }, [isRunning, timeLeft]);
+  }, [isRunning, timeLeft, sessionId, endsAt]);
 
-  const toggleTimer = () => {
-    setIsRunning(!isRunning);
+  const toggleTimer = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const nextEndsAt = Date.now() + (timeLeft || duration) * 1000;
+      if (!sessionId) {
+        const row = await activityService.startFocus(
+          duration / 60,
+          focusTask,
+          new Date(nextEndsAt).toISOString(),
+        );
+        setSessionId(row.id);
+        setTimeLeft(duration);
+      } else
+        await activityService.updateFocus(sessionId, {
+          remaining_seconds: timeLeft,
+          ends_at: isRunning ? null : new Date(nextEndsAt).toISOString(),
+        });
+      setEndsAt(isRunning ? null : nextEndsAt);
+      setIsRunning(!isRunning);
+    } finally {
+      setBusy(false);
+    }
   };
 
-  const resetTimer = () => {
+  const resetTimer = async () => {
+    if (sessionId)
+      await activityService.updateFocus(sessionId, {
+        status: "interrupted",
+        remaining_seconds: timeLeft,
+      });
+    setSessionId(null);
     setIsRunning(false);
     setTimeLeft(duration);
   };
 
-  const handleSelectDuration = (mins: number) => {
+  const handleSelectDuration = async (mins: number) => {
+    await resetTimer();
     setIsRunning(false);
     setDuration(mins * 60);
     setTimeLeft(mins * 60);
@@ -41,7 +105,7 @@ export function FocusView() {
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
-  const formattedTime = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  const formattedTime = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
   const progressPercent = ((duration - timeLeft) / duration) * 100;
 
   return (
@@ -58,6 +122,7 @@ export function FocusView() {
             <Sparkles className="w-3 h-3" /> Focus Session
           </span>
           <input
+            aria-label="Focus task"
             type="text"
             value={focusTask}
             onChange={(e) => setFocusTask(e.target.value)}
@@ -96,7 +161,7 @@ export function FocusView() {
               {formattedTime}
             </span>
             <span className="text-[11px] font-medium text-slate-400 mt-1">
-              {isRunning ? 'Flow state active' : 'Ready to focus'}
+              {isRunning ? "Flow state active" : "Ready to focus"}
             </span>
           </div>
         </div>
@@ -109,10 +174,10 @@ export function FocusView() {
               type="button"
               onClick={() => handleSelectDuration(m)}
               className={cn(
-                'px-3 py-1 rounded-xl text-xs font-semibold transition-all',
+                "px-3 py-1 rounded-xl text-xs font-semibold transition-all",
                 duration === m * 60
-                  ? 'bg-primary text-white font-bold'
-                  : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'
+                  ? "bg-primary text-white font-bold"
+                  : "bg-slate-800/80 text-slate-400 hover:text-slate-200",
               )}
             >
               {m}m
@@ -134,6 +199,7 @@ export function FocusView() {
           <button
             type="button"
             onClick={toggleTimer}
+            disabled={busy}
             className="px-8 py-3.5 rounded-2xl bg-primary hover:bg-primary-hover text-white font-bold text-sm shadow-md transition-all active:scale-95 flex items-center gap-2"
           >
             {isRunning ? (
@@ -149,7 +215,18 @@ export function FocusView() {
 
           <button
             type="button"
-            onClick={() => setTimeLeft(0)}
+            onClick={async () => {
+              if (sessionId) {
+                await activityService.updateFocus(sessionId, {
+                  status: "completed",
+                  completed_at: new Date().toISOString(),
+                  remaining_seconds: 0,
+                });
+                setSessionId(null);
+              }
+              setIsRunning(false);
+              setTimeLeft(0);
+            }}
             title="Complete Session"
             className="p-3 rounded-2xl bg-slate-800/80 hover:bg-slate-800 text-slate-400 hover:text-emerald-400 transition-colors"
           >

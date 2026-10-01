@@ -1,14 +1,18 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { LifeCard } from '@/components/ui/LifeCard';
-import { Briefcase, Clock, ChevronRight } from 'lucide-react';
+import React from "react";
+import { careerService } from "@/lib/services/careerService";
+import { useData } from "@/lib/useData";
+const loadCareer = () => careerService.getJobs();
+import { LifeCard } from "@/components/ui/LifeCard";
+import { Briefcase, Clock, ChevronRight } from "lucide-react";
 
 interface CareerCardProps {
   onClick?: () => void;
 }
 
 export function CareerCard({ onClick }: CareerCardProps) {
+  const jobs = useData(loadCareer, [], "lifeos-career-updated");
   return (
     <LifeCard
       onClick={onClick}
@@ -21,44 +25,33 @@ export function CareerCard({ onClick }: CareerCardProps) {
             CAREER
           </span>
           <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/60 text-primary">
-            2 active
+            {
+              jobs.filter(
+                (j) => !["Rejected", "Closed", "Withdrawn"].includes(j.status),
+              ).length
+            }{" "}
+            active
           </span>
         </div>
 
         <div className="space-y-3">
-          {/* Item 1: Interview */}
-          <div className="p-3 rounded-xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100/70 dark:border-blue-900/40">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-primary">
-                Interview tomorrow
-              </span>
-              <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                <Clock className="w-3 h-3" /> 2:00 PM
-              </span>
+          {jobs.slice(0, 3).map((job) => (
+            <div
+              key={job.id}
+              className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/30"
+            >
+              <span className="text-xs text-primary">{job.status}</span>
+              <p className="text-sm font-semibold">{job.company}</p>
+              <p className="text-xs text-slate-500">
+                {job.title} • {job.next_action}
+              </p>
             </div>
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-1">
-              ABC Security
-            </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              SOC Analyst Role • Stage 2 Technical
-            </p>
-          </div>
-
-          {/* Item 2: Follow-up */}
-          <div className="p-3 rounded-xl bg-slate-50/70 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/60">
-            <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-              Follow up with recruiter
-            </span>
-            <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
-              XYZ Ltd
-            </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Applied 6 days ago • Recruiter: David Clark
-            </p>
-          </div>
+          ))}
+          {!jobs.length && (
+            <p className="text-sm text-slate-500">No applications yet</p>
+          )}
         </div>
       </div>
-
       <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-xs font-medium text-slate-500 dark:text-slate-400">
         <span>Job Applications & Pipeline</span>
         <span className="inline-flex items-center text-primary group-hover:translate-x-0.5 transition-transform font-semibold">

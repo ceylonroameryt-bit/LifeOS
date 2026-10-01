@@ -1,19 +1,18 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { LifeCard } from '@/components/ui/LifeCard';
-import { Lightbulb, ChevronRight } from 'lucide-react';
+import React from "react";
+import { useData } from "@/lib/useData";
+import { ideaService } from "@/lib/services/ideaService";
+const loadIdeas = () => ideaService.getIdeas();
+import { LifeCard } from "@/components/ui/LifeCard";
+import { Lightbulb, ChevronRight } from "lucide-react";
 
 interface IdeaCardProps {
   onClick?: () => void;
 }
 
 export function IdeaCard({ onClick }: IdeaCardProps) {
-  const ideas = [
-    { title: 'Build phishing training tool', time: 'Today' },
-    { title: 'Scotland travel video', time: 'Yesterday' },
-    { title: 'AI cybersecurity podcast', time: '3d ago' },
-  ];
+  const ideas = useData(loadIdeas, [], "lifeos-ideas-updated");
 
   return (
     <LifeCard
@@ -33,12 +32,15 @@ export function IdeaCard({ onClick }: IdeaCardProps) {
 
         <div className="space-y-2">
           {ideas.map((idea, idx) => (
-            <div key={idx} className="flex items-center justify-between py-1 text-sm">
+            <div
+              key={idx}
+              className="flex items-center justify-between py-1 text-sm"
+            >
               <span className="font-medium text-slate-800 dark:text-slate-200 truncate pr-2">
                 💡 {idea.title}
               </span>
               <span className="text-xs text-slate-400 flex-shrink-0">
-                {idea.time}
+                {new Date(idea.created_at).toLocaleDateString()}
               </span>
             </div>
           ))}

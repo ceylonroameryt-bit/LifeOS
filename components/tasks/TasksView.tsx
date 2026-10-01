@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { Task, Priority } from '@/types';
-import { taskService } from '@/lib/services/taskService';
-import { TaskRow } from '@/components/today/TaskRow';
-import { CheckCircle2, Plus, Filter, Calendar } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useState, useEffect } from "react";
+import { Task, Priority } from "@/types";
+import { taskService } from "@/lib/services/taskService";
+import { TaskRow } from "@/components/today/TaskRow";
+import { CheckCircle2, Plus, Filter, Calendar } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface TasksViewProps {
   onOpenQuickAdd: () => void;
@@ -13,7 +13,9 @@ interface TasksViewProps {
 
 export function TasksView({ onOpenQuickAdd }: TasksViewProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [filter, setFilter] = useState<'all' | 'open' | 'completed' | 'important'>('open');
+  const [filter, setFilter] = useState<
+    "all" | "open" | "completed" | "important"
+  >("open");
 
   const loadTasks = async () => {
     const data = await taskService.getTasks();
@@ -23,26 +25,26 @@ export function TasksView({ onOpenQuickAdd }: TasksViewProps) {
   useEffect(() => {
     loadTasks();
     const handleUpdate = () => loadTasks();
-    window.addEventListener('lifeos-tasks-updated', handleUpdate);
-    return () => window.removeEventListener('lifeos-tasks-updated', handleUpdate);
+    window.addEventListener("lifeos-tasks-updated", handleUpdate);
+    return () =>
+      window.removeEventListener("lifeos-tasks-updated", handleUpdate);
   }, []);
 
   const handleToggle = async (id: string) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t))
-    );
     await taskService.toggleTask(id);
+    await loadTasks();
   };
 
   const handleDelete = async (id: string) => {
-    setTasks((prev) => prev.filter((t) => t.id !== id));
     await taskService.deleteTask(id);
+    await loadTasks();
   };
 
   const filteredTasks = tasks.filter((t) => {
-    if (filter === 'open') return !t.completed;
-    if (filter === 'completed') return t.completed;
-    if (filter === 'important') return t.priority === 'Important' && !t.completed;
+    if (filter === "open") return !t.completed;
+    if (filter === "completed") return t.completed;
+    if (filter === "important")
+      return t.priority === "Important" && !t.completed;
     return true;
   });
 
@@ -71,19 +73,19 @@ export function TasksView({ onOpenQuickAdd }: TasksViewProps) {
 
       {/* Filter Tabs */}
       <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-border/60 self-start sm:self-auto w-fit">
-        {(['open', 'all', 'important', 'completed'] as const).map((tab) => (
+        {(["open", "all", "important", "completed"] as const).map((tab) => (
           <button
             key={tab}
             type="button"
             onClick={() => setFilter(tab)}
             className={cn(
-              'px-4 py-1.5 rounded-xl text-xs font-semibold capitalize transition-all',
+              "px-4 py-1.5 rounded-xl text-xs font-semibold capitalize transition-all",
               filter === tab
-                ? 'bg-surface text-slate-900 dark:text-slate-100 shadow-2xs font-bold'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                ? "bg-surface text-slate-900 dark:text-slate-100 shadow-2xs font-bold"
+                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200",
             )}
           >
-            {tab === 'important' ? 'Important Only' : tab}
+            {tab === "important" ? "Important Only" : tab}
           </button>
         ))}
       </div>

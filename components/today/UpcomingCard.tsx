@@ -1,22 +1,34 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { LifeCard } from '@/components/ui/LifeCard';
-import { SEED_UPCOMING } from '@/lib/data/seedData';
-import { CalendarClock, Shield, Clapperboard, FileText, ChevronRight } from 'lucide-react';
+import React from "react";
+import { LifeCard } from "@/components/ui/LifeCard";
+import { adminService } from "@/lib/services/adminService";
+import { useData } from "@/lib/useData";
+const loadUpcoming = async () =>
+  (await adminService.getAdminItems())
+    .filter((i) => i.status === "active")
+    .map((i) => ({ ...i, days_left: i.days_remaining }));
+import {
+  CalendarClock,
+  Shield,
+  Clapperboard,
+  FileText,
+  ChevronRight,
+} from "lucide-react";
 
 interface UpcomingCardProps {
   onClick?: () => void;
 }
 
 export function UpcomingCard({ onClick }: UpcomingCardProps) {
+  const upcoming = useData(loadUpcoming, [], "lifeos-admin-updated");
   const getIcon = (cat: string) => {
     switch (cat) {
-      case 'insurance':
+      case "insurance":
         return <Shield className="w-3.5 h-3.5 text-primary" />;
-      case 'subscription':
+      case "subscription":
         return <Clapperboard className="w-3.5 h-3.5 text-danger" />;
-      case 'document':
+      case "document":
         return <FileText className="w-3.5 h-3.5 text-idea" />;
       default:
         return <CalendarClock className="w-3.5 h-3.5 text-slate-400" />;
@@ -40,7 +52,7 @@ export function UpcomingCard({ onClick }: UpcomingCardProps) {
         </div>
 
         <div className="space-y-2.5">
-          {SEED_UPCOMING.map((item) => (
+          {upcoming.map((item) => (
             <div
               key={item.id}
               className="flex items-center justify-between text-sm py-1 rounded-lg px-1 transition-colors"

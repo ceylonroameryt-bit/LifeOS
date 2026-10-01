@@ -1,9 +1,12 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { CareerJob, JobStatus } from '@/types';
-import { careerService } from '@/lib/services/careerService';
-import { AddJobForm } from '@/components/quick-add/AddJobForm';
+import React, { useState, useEffect } from "react";
+import { CareerJob, JobStatus } from "@/types";
+import { CareerRecords } from "./CareerRecords";
+import { useData } from "@/lib/useData";
+const loadFollowups = () => careerService.getFollowups();
+import { careerService } from "@/lib/services/careerService";
+import { AddJobForm } from "@/components/quick-add/AddJobForm";
 import {
   Briefcase,
   ExternalLink,
@@ -14,12 +17,14 @@ import {
   FileCheck,
   CheckCircle2,
   X,
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function CareerView() {
   const [jobs, setJobs] = useState<CareerJob[]>([]);
-  const [activeTab, setActiveTab] = useState<'All' | 'Applied' | 'Interview' | 'Waiting'>('All');
+  const [activeTab, setActiveTab] = useState<
+    "All" | "Applied" | "Interview" | "Waiting"
+  >("All");
   const [selectedJob, setSelectedJob] = useState<CareerJob | null>(null);
   const [showAddJob, setShowAddJob] = useState(false);
 
@@ -31,8 +36,9 @@ export function CareerView() {
   useEffect(() => {
     loadJobs();
     const handleUpdate = () => loadJobs();
-    window.addEventListener('lifeos-career-updated', handleUpdate);
-    return () => window.removeEventListener('lifeos-career-updated', handleUpdate);
+    window.addEventListener("lifeos-career-updated", handleUpdate);
+    return () =>
+      window.removeEventListener("lifeos-career-updated", handleUpdate);
   }, []);
 
   const handleUpdateStatus = async (jobId: string, status: JobStatus) => {
@@ -43,15 +49,19 @@ export function CareerView() {
     loadJobs();
   };
 
-  const applicationsCount = jobs.length;
-  const interviewCount = jobs.filter((j) => j.status === 'Interview').length;
-  const waitingCount = jobs.filter((j) => j.status === 'Applied' || j.status === 'Screening').length;
+  const followups = useData(loadFollowups, [], "lifeos-career-updated");
+  const applicationsCount = jobs.filter((j) => j.status !== "Saved").length;
+  const interviewCount = jobs.filter((j) => j.status === "Interview").length;
+  const waitingCount = jobs.filter(
+    (j) => j.status === "Applied" || j.status === "Screening",
+  ).length;
 
   const filteredJobs = jobs.filter((job) => {
-    if (activeTab === 'All') return true;
-    if (activeTab === 'Interview') return job.status === 'Interview';
-    if (activeTab === 'Applied') return job.status === 'Applied';
-    if (activeTab === 'Waiting') return job.status === 'Applied' || job.status === 'Screening';
+    if (activeTab === "All") return true;
+    if (activeTab === "Interview") return job.status === "Interview";
+    if (activeTab === "Applied") return job.status === "Applied";
+    if (activeTab === "Waiting")
+      return job.status === "Applied" || job.status === "Screening";
     return true;
   });
 
@@ -107,7 +117,9 @@ export function CareerView() {
           <span className="text-2xl font-extrabold text-primary mt-1 block">
             {interviewCount}
           </span>
-          <span className="text-[11px] text-primary/80 font-medium">Tomorrow: ABC Security</span>
+          <span className="text-[11px] text-primary/80 font-medium">
+            Scheduled interviews
+          </span>
         </div>
 
         <div className="bg-surface rounded-2xl border border-border/80 p-4 shadow-2xs">
@@ -115,24 +127,30 @@ export function CareerView() {
             Follow-ups Due
           </span>
           <span className="text-2xl font-extrabold text-amber-500 mt-1 block">
-            1
+            {
+              followups.filter(
+                (f) =>
+                  f.status === "pending" &&
+                  f.followup_date <= new Date().toISOString().slice(0, 10),
+              ).length
+            }
           </span>
-          <span className="text-[11px] text-slate-400">XYZ Ltd (Applied 6d ago)</span>
+          <span className="text-[11px] text-slate-400">Pending follow-ups</span>
         </div>
       </div>
 
       {/* Tab Filter */}
       <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-2xl border border-border/60 self-start sm:self-auto w-fit">
-        {(['All', 'Applied', 'Interview', 'Waiting'] as const).map((tab) => (
+        {(["All", "Applied", "Interview", "Waiting"] as const).map((tab) => (
           <button
             key={tab}
             type="button"
             onClick={() => setActiveTab(tab)}
             className={cn(
-              'px-4 py-1.5 rounded-xl text-xs font-semibold transition-all',
+              "px-4 py-1.5 rounded-xl text-xs font-semibold transition-all",
               activeTab === tab
-                ? 'bg-surface text-slate-900 dark:text-slate-100 shadow-2xs font-bold'
-                : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+                ? "bg-surface text-slate-900 dark:text-slate-100 shadow-2xs font-bold"
+                : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200",
             )}
           >
             {tab}
@@ -155,10 +173,13 @@ export function CareerView() {
               <div>
                 <h3 className="font-bold text-slate-900 dark:text-slate-100 text-base flex items-center gap-2">
                   {job.title}
-                  <span className="text-xs font-normal text-slate-400">at {job.company}</span>
+                  <span className="text-xs font-normal text-slate-400">
+                    at {job.company}
+                  </span>
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  {job.location} • {job.work_style} {job.salary ? `• ${job.salary}` : ''}
+                  {job.location} • {job.work_style}{" "}
+                  {job.salary ? `• ${job.salary}` : ""}
                 </p>
               </div>
             </div>
@@ -171,12 +192,12 @@ export function CareerView() {
               )}
               <span
                 className={cn(
-                  'text-xs font-semibold px-2.5 py-1 rounded-full',
-                  job.status === 'Interview'
-                    ? 'bg-blue-50 dark:bg-blue-950/60 text-primary'
-                    : job.status === 'Offer'
-                    ? 'bg-emerald-50 dark:bg-emerald-950/60 text-success'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                  "text-xs font-semibold px-2.5 py-1 rounded-full",
+                  job.status === "Interview"
+                    ? "bg-blue-50 dark:bg-blue-950/60 text-primary"
+                    : job.status === "Offer"
+                      ? "bg-emerald-50 dark:bg-emerald-950/60 text-success"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300",
                 )}
               >
                 {job.status}
@@ -186,6 +207,7 @@ export function CareerView() {
         ))}
       </div>
 
+      <CareerRecords />
       {/* Job Detail Modal (Section 34 of specifications) */}
       {selectedJob && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -201,7 +223,8 @@ export function CareerView() {
                   {selectedJob.title}
                 </h3>
                 <p className="text-sm font-semibold text-primary mt-0.5">
-                  {selectedJob.company} • {selectedJob.location} ({selectedJob.work_style})
+                  {selectedJob.company} • {selectedJob.location} (
+                  {selectedJob.work_style})
                 </p>
               </div>
               <button
@@ -219,23 +242,29 @@ export function CareerView() {
                 UPDATE STAGE
               </label>
               <div className="grid grid-cols-3 gap-1">
-                {(['Applied', 'Screening', 'Interview', 'Offer', 'Rejected'] as JobStatus[]).map(
-                  (st) => (
-                    <button
-                      key={st}
-                      type="button"
-                      onClick={() => handleUpdateStatus(selectedJob.id, st)}
-                      className={cn(
-                        'py-1.5 text-xs font-semibold rounded-lg transition-all',
-                        selectedJob.status === st
-                          ? 'bg-surface text-primary shadow-xs font-bold'
-                          : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-                      )}
-                    >
-                      {st}
-                    </button>
-                  )
-                )}
+                {(
+                  [
+                    "Applied",
+                    "Screening",
+                    "Interview",
+                    "Offer",
+                    "Rejected",
+                  ] as JobStatus[]
+                ).map((st) => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => handleUpdateStatus(selectedJob.id, st)}
+                    className={cn(
+                      "py-1.5 text-xs font-semibold rounded-lg transition-all",
+                      selectedJob.status === st
+                        ? "bg-surface text-primary shadow-xs font-bold"
+                        : "text-slate-500 hover:text-slate-800 dark:hover:text-slate-200",
+                    )}
+                  >
+                    {st}
+                  </button>
+                ))}
               </div>
             </div>
 
@@ -255,7 +284,7 @@ export function CareerView() {
                     <User className="w-3.5 h-3.5" /> Recruiter
                   </span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
-                    {selectedJob.recruiter || 'Jane Smith'}
+                    {selectedJob.recruiter || "Not linked"}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
@@ -263,7 +292,7 @@ export function CareerView() {
                     <FileCheck className="w-3.5 h-3.5" /> CV Version
                   </span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200">
-                    {selectedJob.cv_version || 'SOC CV v12'}
+                    {selectedJob.cv_version || "Not linked"}
                   </span>
                 </div>
               </div>
