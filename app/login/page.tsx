@@ -1,14 +1,23 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
-  const [signup, setSignup] = useState(false);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    const error = new URLSearchParams(location.search).get("error");
+    if (error === "configuration")
+      setMessage("Private account access has not been configured yet.");
+    if (error === "access")
+      setMessage("This private LifeOS is available only to its owner.");
+    if (error === "confirmation")
+      setMessage(
+        "That account link is invalid or expired. Request a new password reset link.",
+      );
+  }, []);
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
@@ -19,24 +28,34 @@ export default function Login() {
         throw new Error(
           "Configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to sign in.",
         );
-      const result = signup
-        ? await client.auth.signUp({
-            email,
-            password,
-            options: {
-              data: { name },
-              emailRedirectTo: `${location.origin}/auth/callback`,
-            },
-          })
-        : await client.auth.signInWithPassword({ email, password });
+      const result = await client.auth.signInWithPassword({ email, password });
       if (result.error) throw result.error;
       if (!result.data.session) {
-        setMessage("Check your email to confirm your account.");
+        setMessage("No sign-in session was created. Please try again.");
         return;
       }
       const next = new URLSearchParams(location.search).get("next");
+      // Restrict post-login navigation to recognized LifeOS modules.
+      const modules = [
+        "today",
+        "tasks",
+        "money",
+        "habits",
+        "career",
+        "ideas",
+        "goals",
+        "wishlist",
+        "admin",
+        "calendar",
+        "inbox",
+        "focus",
+        "insights",
+        "weekly-review",
+        "me",
+        "settings",
+      ];
       location.assign(
-        next && next.startsWith("/") && !next.startsWith("//")
+        next && modules.some((module) => next === `/${module}`)
           ? next
           : "/today",
       );
@@ -53,18 +72,7 @@ export default function Login() {
         className="bg-white rounded-3xl border p-8 space-y-4 w-full max-w-md"
       >
         <h1 className="text-2xl font-bold">LifeOS</h1>
-        <p>{signup ? "Create your account" : "Sign in to your life system"}</p>
-        {signup && (
-          <label className="block">
-            Name
-            <input
-              className="block border rounded-xl p-3 w-full"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </label>
-        )}
+        <p>Sign in to your private life system</p>
         <label className="block">
           Email
           <input
@@ -81,7 +89,7 @@ export default function Login() {
           <input
             className="block border rounded-xl p-3 w-full"
             type="password"
-            autoComplete={signup ? "new-password" : "current-password"}
+            autoComplete="current-password"
             minLength={8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -93,36 +101,44 @@ export default function Login() {
           disabled={busy}
           className="bg-primary text-white rounded-xl p-3 w-full"
         >
-          {busy ? "Please wait…" : signup ? "Create account" : "Sign in"}
+          {busy ? "Please wait..." : "Sign in"}
         </button>
-        <button type="button" onClick={() => setSignup(!signup)}>
-          {signup ? "Already have an account? Sign in" : "Create an account"}
-        </button>
-        {!signup && (
-          <button
-            type="button"
-            className="block text-sm text-primary"
-            onClick={async () => {
-              const client = createClient();
-              if (!client) {
-                setMessage("Supabase is not configured.");
-                return;
-              }
-              if (!email.trim()) {
-                setMessage("Enter your email first.");
-                return;
-              }
+        <button
+          type="button"
+          className="block text-sm text-primary"
+          onClick={async () => {
+            const client = createClient();
+            if (!client) {
+              setMessage("Supabase is not configured.");
+              return;
+            }
+            if (!email.trim()) {
+              setMessage("Enter your email first.");
+              return;
+            }
+            setBusy(true);
+            try {
               const { error } = await client.auth.resetPasswordForEmail(email, {
                 redirectTo: `${location.origin}/auth/callback?next=/auth/reset`,
               });
               setMessage(
                 error?.message || "Check your email for a password reset link.",
               );
-            }}
-          >
-            Forgot password?
-          </button>
-        )}
+            } catch {
+              setMessage(
+                "Could not request a password reset. Please try again.",
+              );
+            } finally {
+              setBusy(false);
+            }
+          }}
+          disabled={busy}
+        >
+          Forgot password?
+        </button>
+        <p className="text-sm text-muted-foreground">
+          Personal access only. Registration is closed.
+        </p>
       </form>
     </main>
   );

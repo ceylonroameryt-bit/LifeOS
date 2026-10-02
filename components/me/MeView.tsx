@@ -5,7 +5,7 @@ import { NotificationHistory } from "./NotificationHistory";
 import { profileService } from "@/lib/services/profileService";
 import { activityService } from "@/lib/services/activityService";
 import { createClient } from "@/lib/supabase/client";
-import { list } from "@/lib/services/store";
+import { backupService } from "@/lib/services/backupService";
 import { LifeCard } from "@/components/ui/LifeCard";
 import {
   CreditCard,
@@ -52,6 +52,8 @@ export function MeView({
   const [editingName, setEditingName] = useState(false);
   const [nameVal, setNameVal] = useState(userName);
   const [exportNotice, setExportNotice] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
 
   const handleSaveName = async () => {
     if (nameVal.trim()) {
@@ -61,46 +63,38 @@ export function MeView({
   };
 
   const handleExportData = async () => {
-    const data = {
-      profile: { name: userName, exported_at: new Date().toISOString() },
-      records: Object.fromEntries(
-        await Promise.all(
-          [
-            "tasks",
-            "expenses",
-            "budgets",
-            "habits",
-            "habit_entries",
-            "jobs",
-            "interviews",
-            "job_followups",
-            "recruiters",
-            "cv_versions",
-            "ideas",
-            "goals",
-            "notes",
-            "admin_items",
-            "wishlist_items",
-            "inbox_items",
-            "focus_sessions",
-            "weekly_reviews",
-            "notification_preferences",
-            "notifications",
-          ].map(async (table) => [table, await list(table)]),
-        ),
-      ),
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `lifeos-backup-${new Date().toISOString().split("T")[0]}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    setExportNotice(true);
-    setTimeout(() => setExportNotice(false), 3000);
+    if (exporting) return;
+    setExporting(true);
+    setExportError("");
+    setExportNotice(false);
+    try {
+      const data = await backupService.exportData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      try {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `lifeos-data-${data.exported_at.split("T")[0]}.json`;
+        document.body.appendChild(a);
+        try {
+          a.click();
+        } finally {
+          a.remove();
+        }
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+      setExportNotice(true);
+      setTimeout(() => setExportNotice(false), 3000);
+    } catch (error) {
+      setExportError(
+        error instanceof Error ? error.message : "Data export failed.",
+      );
+    } finally {
+      setExporting(false);
+    }
   };
 
   const overviewRows = [
@@ -302,7 +296,9 @@ export function MeView({
           <button
             type="button"
             onClick={handleExportData}
-            className="w-full flex items-center justify-between p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors text-left"
+            disabled={exporting}
+            aria-busy={exporting}
+            className="w-full flex items-center justify-between p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors text-left disabled:opacity-60"
           >
             <div className="flex items-center gap-3.5">
               <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
@@ -313,9 +309,24 @@ export function MeView({
               </span>
             </div>
             <span className="text-xs font-semibold text-primary">
-              {exportNotice ? "Exported!" : "Download JSON"}
+              {exporting
+                ? "Preparing…"
+                : exportNotice
+                  ? "Download started"
+                  : "Download JSON"}
             </span>
           </button>
+          <div className="px-4 py-3 space-y-2 text-xs text-slate-500 dark:text-slate-400">
+            <p>
+              Export synced account data as JSON. Automatic backups and restore
+              are not included.
+            </p>
+            {exportError && (
+              <p role="alert" className="text-danger">
+                {exportError}
+              </p>
+            )}
+          </div>
 
           {/* Sign Out */}
           <button

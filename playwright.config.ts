@@ -17,6 +17,7 @@ export default defineConfig({
       env: {
         NEXT_PUBLIC_SUPABASE_URL: "http://127.0.0.1:54329",
         NEXT_PUBLIC_SUPABASE_ANON_KEY: "test-anon-key",
+        LIFEOS_OWNER_ID: "00000000-0000-4000-8000-000000000001",
       },
     },
   ],

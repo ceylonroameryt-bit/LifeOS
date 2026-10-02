@@ -14,13 +14,10 @@ it("shows configuration errors and never pretends to sign in", async () => {
     "Configure NEXT_PUBLIC_SUPABASE_URL",
   );
 });
-it("exposes signup with a real name field", async () => {
+it("does not expose public registration", async () => {
   render(<Login />);
-  await userEvent.click(
-    screen.getByRole("button", { name: "Create an account" }),
-  );
-  expect(screen.getByLabelText("Name")).toBeRequired();
   expect(
-    screen.getByRole("button", { name: "Create account" }),
-  ).toBeInTheDocument();
+    screen.queryByRole("button", { name: /Create.*account/i }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByText(/Registration is closed/)).toBeInTheDocument();
 });

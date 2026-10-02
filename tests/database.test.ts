@@ -9,7 +9,7 @@ const job = "00000000-0000-4000-8000-000000000003";
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(
-    `CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY,email text,raw_user_meta_data jsonb DEFAULT '{}');CREATE ROLE authenticated;CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$SELECT NULLIF(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated;`,
+    `CREATE SCHEMA auth;CREATE TABLE auth.users(id uuid PRIMARY KEY,email text,raw_user_meta_data jsonb DEFAULT '{}');CREATE ROLE anon;CREATE ROLE authenticated;CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$SELECT NULLIF(current_setting('request.jwt.claim.sub',true),'')::uuid$$;GRANT USAGE ON SCHEMA auth TO authenticated;GRANT EXECUTE ON FUNCTION auth.uid() TO authenticated;`,
   );
   for (const file of fs.readdirSync("supabase/migrations").sort()) {
     // PGlite provides gen_random_uuid; only the unsupported extension declaration
@@ -21,11 +21,52 @@ beforeAll(async () => {
     await db.exec(sql);
   }
   await db.exec(
-    `INSERT INTO auth.users(id,email) VALUES('${A}','a@test.local'),('${B}','b@test.local');GRANT USAGE ON SCHEMA public TO authenticated;GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO authenticated;INSERT INTO jobs(id,user_id,job_title,company) VALUES('${job}','${B}','Private','B');SET ROLE authenticated;SET request.jwt.claim.sub='${A}';`,
+    `INSERT INTO auth.users(id,email) VALUES('${A}','a@test.local'),('${B}','b@test.local');INSERT INTO private_app_owner(user_id) VALUES('${A}');GRANT USAGE ON SCHEMA public TO authenticated;GRANT SELECT,INSERT,UPDATE,DELETE ON ALL TABLES IN SCHEMA public TO authenticated;INSERT INTO jobs(id,user_id,job_title,company) VALUES('${job}','${B}','Private','B');SET ROLE authenticated;SET request.jwt.claim.sub='${A}';`,
   );
 }, 30000);
 afterAll(async () => {
   await db?.close();
+});
+it("denies a second valid account and prevents it changing the private owner", async () => {
+  await db.exec(`SET request.jwt.claim.sub='${B}';`);
+  try {
+    expect((await db.query("SELECT * FROM profiles")).rows).toEqual([]);
+    expect((await db.query("SELECT * FROM jobs")).rows).toEqual([]);
+    expect((await db.query("SELECT * FROM expense_categories")).rows).toEqual(
+      [],
+    );
+    await expect(
+      db.exec(`INSERT INTO tasks(user_id,title) VALUES('${B}','Unauthorized')`),
+    ).rejects.toThrow(/row-level security/);
+    await db.exec(`UPDATE private_app_owner SET user_id='${B}'`);
+    expect((await db.query("SELECT * FROM private_app_owner")).rows).toEqual(
+      [],
+    );
+  } finally {
+    await db.exec(`SET request.jwt.claim.sub='${A}';`);
+  }
+  expect(
+    (
+      await db.query<{ allowed: boolean }>(
+        "SELECT public.is_private_owner() AS allowed",
+      )
+    ).rows[0].allowed,
+  ).toBe(true);
+});
+it("denies access when the owner configuration is empty", async () => {
+  await db.exec(
+    "RESET ROLE; DELETE FROM private_app_owner; SET ROLE authenticated;",
+  );
+  try {
+    expect((await db.query("SELECT * FROM profiles")).rows).toEqual([]);
+    await expect(
+      db.exec(`INSERT INTO tasks(user_id,title) VALUES('${A}','Unconfigured')`),
+    ).rejects.toThrow(/row-level security/);
+  } finally {
+    await db.exec(
+      `RESET ROLE; INSERT INTO private_app_owner(user_id) VALUES('${A}'); SET ROLE authenticated;`,
+    );
+  }
 });
 it("new users get profiles, settings, budgets and notification preferences", async () => {
   const result = await db.query<{ name: string }>(

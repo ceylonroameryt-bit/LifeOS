@@ -12,7 +12,15 @@ const user = {
   created_at: new Date().toISOString(),
 };
 const encode = (v) => Buffer.from(JSON.stringify(v)).toString("base64url");
-const token = `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: id, role: "authenticated", aud: "authenticated", exp: Math.floor(Date.now() / 1000) + 3600 })}.test-signature`;
+const tokenFor = (userId) =>
+  `${encode({ alg: "HS256", typ: "JWT" })}.${encode({ sub: userId, role: "authenticated", aud: "authenticated", exp: Math.floor(Date.now() / 1000) + 3600 })}.test-signature`;
+const token = tokenFor(id);
+const otherUser = {
+  ...user,
+  id: "00000000-0000-4000-8000-000000000002",
+  email: "other@lifeos.test",
+};
+const otherToken = tokenFor(otherUser.id);
 const tables = {
   profiles: [
     {
@@ -54,16 +62,21 @@ const server = http.createServer(async (req, res) => {
     res.end(JSON.stringify(value));
   };
   if (url.pathname === "/health") return send({ ok: true });
-  if (url.pathname === "/auth/v1/token")
-    return input.email === "test@lifeos.test" &&
-      input.password === "password123"
+  if (url.pathname === "/auth/v1/token") {
+    const account =
+      input.email === user.email
+        ? user
+        : input.email === otherUser.email
+          ? otherUser
+          : null;
+    return account && input.password === "password123"
       ? send({
-          access_token: token,
+          access_token: account === user ? token : otherToken,
           refresh_token: "test-refresh-token",
           expires_in: 3600,
           expires_at: Math.floor(Date.now() / 1000) + 3600,
           token_type: "bearer",
-          user,
+          user: account,
         })
       : send(
           {
@@ -72,11 +85,16 @@ const server = http.createServer(async (req, res) => {
           },
           400,
         );
+  }
   if (url.pathname === "/auth/v1/user")
     return req.headers.authorization === `Bearer ${token}`
       ? send(user)
-      : send({ message: "Invalid JWT" }, 401);
+      : req.headers.authorization === `Bearer ${otherToken}`
+        ? send(otherUser)
+        : send({ message: "Invalid JWT" }, 401);
   if (url.pathname === "/auth/v1/logout") return send({});
+  if (req.headers.authorization !== `Bearer ${token}`)
+    return send({ message: "Private owner access required" }, 403);
   const table = url.pathname.replace("/rest/v1/", "");
   const rows = (tables[table] ??= []);
   tables[table] = rows;

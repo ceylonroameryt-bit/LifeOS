@@ -1,6 +1,7 @@
 import LifeOSApp from "@/components/LifeOSApp";
 import { notFound, redirect } from "next/navigation";
 import { serverClient } from "@/lib/supabase/server";
+import { ownerAccess, ownerId } from "@/lib/auth/owner";
 const modules = [
   "today",
   "tasks",
@@ -26,11 +27,15 @@ export default async function Page({
 }) {
   const { module } = await params;
   if (!modules.includes(module)) notFound();
+  if (!ownerId()) redirect("/login?error=configuration");
   const client = await serverClient();
-  if (!client) redirect("/login");
+  if (!client) redirect("/login?error=configuration");
   const {
     data: { user },
+    error,
   } = await client.auth.getUser();
-  if (!user) redirect("/login");
+  const access = ownerAccess(error ? null : user);
+  if (access === "authentication") redirect("/login");
+  if (access !== "allowed") redirect(`/login?error=${access}`);
   return <LifeOSApp />;
 }

@@ -1,15 +1,15 @@
 # LifeOS
 
-The existing responsive LifeOS interface now uses protected Next.js module URLs and Supabase-backed account data. Production never substitutes example records or localStorage data after a database failure. A new account displays empty lists; failed operations display an error and retain the form.
+This installation is a private personal LifeOS for one configured owner. The existing responsive interface uses protected Next.js module URLs and Supabase-backed account data. See [PRIVATE_DEPLOYMENT.md](PRIVATE_DEPLOYMENT.md) for the account, database and hosting setup. Production never substitutes example records or localStorage data after a database failure. A new account displays empty lists; failed operations display an error and retain the form.
 
 ## Run and deploy
 
 1. Use Node.js 22 or later and run `npm ci`.
-2. Copy `.env.local.example` to `.env.local`. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to the Supabase project URL and public anon key. Never use a service-role key in the browser.
-3. Apply the migrations in filename order. For an existing installation, apply only the new `20261002_persistence_security.sql` and `20261003_notifications_conversions.sql` migrations after the two original migrations. Back up the database first. The first new migration keeps the latest duplicate review for a user/week before introducing its unique key.
-4. In Supabase Auth, enable email/password authentication and configure your deployed Site URL. Allow redirect URLs ending in `/auth/callback` and `/auth/callback?next=/auth/reset`. Configure production SMTP for confirmation and password reset emails. Existing accounts must already have their profile rows; the signup trigger initializes new accounts.
+2. Copy `.env.local.example` to `.env.local`. Set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` to the Supabase project URL and public anon key. Set the server-only `LIFEOS_OWNER_ID` and database `private_app_owner` row to your verified auth UUID; missing configuration denies access. Never use a service-role key in the browser.
+3. Apply the migrations in filename order. For an existing installation, apply only the new `20261002_persistence_security.sql`, `20261003_notifications_conversions.sql`, and `20261004_private_owner.sql` migrations after the two original migrations. Back up the database first. The first new migration keeps the latest duplicate review for a user/week before introducing its unique key.
+4. In Supabase Auth, create or identify your own verified account, disable new signups, keep email/password authentication enabled, and configure your deployed Site URL. Allow redirect URLs ending in `/auth/callback` and `/auth/callback?next=/auth/reset`. Configure production SMTP for confirmation and password reset emails. Existing accounts must already have their profile rows; the signup trigger initializes new accounts.
 5. Run `npm run typecheck`, `npm run lint`, `npm test`, and `npm run build`. Deploy with the same public environment variables available at build time; run `npm start` on the server. HTTPS is required for service workers outside localhost.
-6. Verify signup, email confirmation, password reset, and two-user RLS isolation against your actual Supabase project before opening it to users. No hosted Supabase credentials were supplied for this change; local validation uses a real PostgreSQL engine for migrations and a test HTTP backend for browser flows.
+6. Verify owner sign-in, disabled API signup, password reset, and rejection of a second valid account against your actual Supabase project before storing personal data. No hosted Supabase credentials were supplied for this change; local validation uses a real PostgreSQL engine for migrations and a test HTTP backend for browser flows.
 
 ## Data and routes
 
