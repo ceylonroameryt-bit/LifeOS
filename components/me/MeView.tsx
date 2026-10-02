@@ -1,7 +1,12 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { LifeCard } from '@/components/ui/LifeCard';
+import React, { useState, useEffect } from "react";
+import { NotificationHistory } from "./NotificationHistory";
+import { profileService } from "@/lib/services/profileService";
+import { activityService } from "@/lib/services/activityService";
+import { createClient } from "@/lib/supabase/client";
+import { backupService } from "@/lib/services/backupService";
+import { LifeCard } from "@/components/ui/LifeCard";
 import {
   CreditCard,
   Flame,
@@ -18,11 +23,11 @@ import {
   Globe,
   DollarSign,
   CheckCircle2,
-} from 'lucide-react';
+} from "lucide-react";
 
 interface MeViewProps {
   userName: string;
-  onUpdateName: (name: string) => void;
+  onUpdateName: (name: string) => void | Promise<void>;
   isDark: boolean;
   onToggleTheme: () => void;
   onNavigateTab?: (tab: string) => void;
@@ -35,40 +40,113 @@ export function MeView({
   onToggleTheme,
   onNavigateTab,
 }: MeViewProps) {
+  const [email, setEmail] = useState("");
+  const [notifications, setNotifications] = useState(false);
+  useEffect(() => {
+    void profileService.getProfile().then((p) => setEmail(p.email || ""));
+    void activityService
+      .getNotifications()
+      .then((p) => setNotifications(p?.task_reminders || false));
+  }, []);
+  useEffect(() => setNameVal(userName), [userName]);
   const [editingName, setEditingName] = useState(false);
   const [nameVal, setNameVal] = useState(userName);
   const [exportNotice, setExportNotice] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState("");
 
-  const handleSaveName = () => {
+  const handleSaveName = async () => {
     if (nameVal.trim()) {
-      onUpdateName(nameVal.trim());
+      await onUpdateName(nameVal.trim());
       setEditingName(false);
     }
   };
 
-  const handleExportData = () => {
-    const data = {
-      profile: { name: userName, exported_at: new Date().toISOString() },
-      system: 'LifeOS v1.0',
-    };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `lifeos-backup-${new Date().toISOString().split('T')[0]}.json`;
-    a.click();
-    setExportNotice(true);
-    setTimeout(() => setExportNotice(false), 3000);
+  const handleExportData = async () => {
+    if (exporting) return;
+    setExporting(true);
+    setExportError("");
+    setExportNotice(false);
+    try {
+      const data = await backupService.exportData();
+      const blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      try {
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `lifeos-data-${data.exported_at.split("T")[0]}.json`;
+        document.body.appendChild(a);
+        try {
+          a.click();
+        } finally {
+          a.remove();
+        }
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+      setExportNotice(true);
+      setTimeout(() => setExportNotice(false), 3000);
+    } catch (error) {
+      setExportError(
+        error instanceof Error ? error.message : "Data export failed.",
+      );
+    } finally {
+      setExporting(false);
+    }
   };
 
   const overviewRows = [
-    { id: 'money', title: 'Money', detail: '£42 left this week', icon: CreditCard, color: 'text-emerald-500' },
-    { id: 'habits', title: 'Habits', detail: '6-day streak • Gym 4/5', icon: Flame, color: 'text-rose-500' },
-    { id: 'ideas', title: 'Ideas', detail: '3 sparks captured', icon: Lightbulb, color: 'text-amber-500' },
-    { id: 'career', title: 'Career', detail: '3 applications • 1 interview', icon: Briefcase, color: 'text-primary' },
-    { id: 'goals', title: 'Goals', detail: '3 milestones active', icon: Target, color: 'text-purple' },
-    { id: 'wishlist', title: 'Wishlist', detail: 'Sony Lens 41h wait left', icon: Heart, color: 'text-pink-500' },
-    { id: 'admin', title: 'Life Admin', detail: 'Car insurance due in 12d', icon: Shield, color: 'text-blue-500' },
+    {
+      id: "money",
+      title: "Money",
+      detail: "Open module",
+      icon: CreditCard,
+      color: "text-emerald-500",
+    },
+    {
+      id: "habits",
+      title: "Habits",
+      detail: "Open module",
+      icon: Flame,
+      color: "text-rose-500",
+    },
+    {
+      id: "ideas",
+      title: "Ideas",
+      detail: "Open module",
+      icon: Lightbulb,
+      color: "text-amber-500",
+    },
+    {
+      id: "career",
+      title: "Career",
+      detail: "Open module",
+      icon: Briefcase,
+      color: "text-primary",
+    },
+    {
+      id: "goals",
+      title: "Goals",
+      detail: "Open module",
+      icon: Target,
+      color: "text-purple",
+    },
+    {
+      id: "wishlist",
+      title: "Wishlist",
+      detail: "Open module",
+      icon: Heart,
+      color: "text-pink-500",
+    },
+    {
+      id: "admin",
+      title: "Life Admin",
+      detail: "Open module",
+      icon: Shield,
+      color: "text-blue-500",
+    },
   ];
 
   return (
@@ -111,7 +189,7 @@ export function MeView({
               </div>
             )}
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              poorna@lifeos.local • Europe/London (GMT)
+              {email}
             </p>
           </div>
         </div>
@@ -133,7 +211,9 @@ export function MeView({
                 className="w-full flex items-center justify-between p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors text-left"
               >
                 <div className="flex items-center gap-3.5">
-                  <div className={`p-2 rounded-xl bg-slate-50 dark:bg-slate-800 ${item.color}`}>
+                  <div
+                    className={`p-2 rounded-xl bg-slate-50 dark:bg-slate-800 ${item.color}`}
+                  >
                     <Icon className="w-4 h-4 stroke-[2]" />
                   </div>
                   <span className="text-sm font-semibold text-slate-800 dark:text-slate-200">
@@ -150,6 +230,7 @@ export function MeView({
         </LifeCard>
       </div>
 
+      <NotificationHistory />
       {/* Preferences & Settings */}
       <div className="space-y-2">
         <span className="text-xs font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase px-1">
@@ -171,7 +252,7 @@ export function MeView({
               </span>
             </div>
             <span className="text-xs font-semibold text-primary">
-              {isDark ? 'Dark Mode' : 'Light Mode'}
+              {isDark ? "Dark Mode" : "Light Mode"}
             </span>
           </button>
 
@@ -185,7 +266,9 @@ export function MeView({
                 Currency
               </span>
             </div>
-            <span className="text-xs font-semibold text-slate-500">GBP (£)</span>
+            <span className="text-xs font-semibold text-slate-500">
+              GBP (£)
+            </span>
           </div>
 
           {/* Notifications */}
@@ -198,14 +281,24 @@ export function MeView({
                 Notifications
               </span>
             </div>
-            <span className="text-xs font-semibold text-success">Enabled</span>
+            <button
+              className="text-xs text-primary"
+              onClick={async () => {
+                await activityService.setNotifications(!notifications);
+                setNotifications(!notifications);
+              }}
+            >
+              {notifications ? "Enabled" : "Disabled"}
+            </button>
           </div>
 
           {/* Data Export */}
           <button
             type="button"
             onClick={handleExportData}
-            className="w-full flex items-center justify-between p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors text-left"
+            disabled={exporting}
+            aria-busy={exporting}
+            className="w-full flex items-center justify-between p-4 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors text-left disabled:opacity-60"
           >
             <div className="flex items-center gap-3.5">
               <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
@@ -216,23 +309,39 @@ export function MeView({
               </span>
             </div>
             <span className="text-xs font-semibold text-primary">
-              {exportNotice ? 'Exported!' : 'Download JSON'}
+              {exporting
+                ? "Preparing…"
+                : exportNotice
+                  ? "Download started"
+                  : "Download JSON"}
             </span>
           </button>
+          <div className="px-4 py-3 space-y-2 text-xs text-slate-500 dark:text-slate-400">
+            <p>
+              Export synced account data as JSON. Automatic backups and restore
+              are not included.
+            </p>
+            {exportError && (
+              <p role="alert" className="text-danger">
+                {exportError}
+              </p>
+            )}
+          </div>
 
           {/* Sign Out */}
           <button
             type="button"
-            onClick={() => alert('Session secured.')}
+            onClick={async () => {
+              await createClient()?.auth.signOut();
+              location.assign("/login");
+            }}
             className="w-full flex items-center justify-between p-4 hover:bg-rose-50/50 dark:hover:bg-rose-950/20 transition-colors text-left"
           >
             <div className="flex items-center gap-3.5">
               <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 text-danger">
                 <LogOut className="w-4 h-4 stroke-[2]" />
               </div>
-              <span className="text-sm font-medium text-danger">
-                Sign Out
-              </span>
+              <span className="text-sm font-medium text-danger">Sign Out</span>
             </div>
             <span className="text-xs text-slate-400">Lock Session</span>
           </button>

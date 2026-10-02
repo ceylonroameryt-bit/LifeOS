@@ -1,12 +1,15 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { MobileNav } from './MobileNav';
-import { DesktopSidebar } from './DesktopSidebar';
-import { TabletRail } from './TabletRail';
-import { QuickAddModal } from '@/components/quick-add/QuickAddModal';
-import { profileService } from '@/lib/services/profileService';
-import { Sun, Moon, Search } from 'lucide-react';
+import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { DataStatus } from "./DataStatus";
+import React, { useState, useEffect } from "react";
+import { MobileNav } from "./MobileNav";
+import { DesktopSidebar } from "./DesktopSidebar";
+import { TabletRail } from "./TabletRail";
+import { QuickAddModal } from "@/components/quick-add/QuickAddModal";
+import { profileService } from "@/lib/services/profileService";
+import { Sun, Moon, Search } from "lucide-react";
 
 interface AppShellProps {
   children: (props: {
@@ -16,60 +19,71 @@ interface AppShellProps {
     onOpenQuickAdd: () => void;
     isDark: boolean;
     onToggleTheme: () => void;
-    onUpdateName: (name: string) => void;
+    onUpdateName: (name: string) => void | Promise<void>;
   }) => React.ReactNode;
 }
 
 export function AppShell({ children }: AppShellProps) {
-  const [currentTab, setCurrentTab] = useState<string>('today');
+  const router = useRouter();
+  const currentTab = usePathname().split("/")[1] || "today";
+  const setCurrentTab = (tab: string) => {
+    if (!navigator.onLine) window.history.pushState(null, "", "/" + tab);
+    else router.push("/" + tab);
+  };
   const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
-  const [userName, setUserName] = useState('Poorna');
+  const [userName, setUserName] = useState("");
   const [isDark, setIsDark] = useState(false);
 
   // Initialize profile and theme
   useEffect(() => {
-    profileService.getProfile().then((prof) => {
-      if (prof?.name) setUserName(prof.name);
-    });
+    profileService
+      .getProfile()
+      .then((prof) => {
+        if (prof?.name) setUserName(prof.name);
+      })
+      .catch(() => {});
 
     const handleProfileUpdate = () => {
-      profileService.getProfile().then((prof) => {
-        if (prof?.name) setUserName(prof.name);
-      });
+      profileService
+        .getProfile()
+        .then((prof) => {
+          if (prof?.name) setUserName(prof.name);
+        })
+        .catch(() => {});
     };
 
     const handleOpenQuickAdd = () => setIsQuickAddOpen(true);
 
-    window.addEventListener('lifeos-profile-updated', handleProfileUpdate);
-    window.addEventListener('lifeos-open-quick-add', handleOpenQuickAdd);
+    window.addEventListener("lifeos-profile-updated", handleProfileUpdate);
+    window.addEventListener("lifeos-open-quick-add", handleOpenQuickAdd);
 
     // Dark mode check
     if (
-      localStorage.theme === 'dark' ||
-      (!('theme' in localStorage) &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches)
+      localStorage.theme === "dark" ||
+      (!("theme" in localStorage) &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches)
     ) {
       setIsDark(true);
-      document.documentElement.classList.add('dark');
+      document.documentElement.classList.add("dark");
     } else {
       setIsDark(false);
-      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.remove("dark");
     }
 
     return () => {
-      window.removeEventListener('lifeos-profile-updated', handleProfileUpdate);
-      window.removeEventListener('lifeos-open-quick-add', handleOpenQuickAdd);
+      window.removeEventListener("lifeos-profile-updated", handleProfileUpdate);
+      window.removeEventListener("lifeos-open-quick-add", handleOpenQuickAdd);
     };
   }, []);
 
   const toggleTheme = () => {
     if (isDark) {
-      document.documentElement.classList.remove('dark');
-      localStorage.theme = 'light';
+      document.documentElement.classList.remove("dark");
+      localStorage.theme = "light";
       setIsDark(false);
     } else {
-      document.documentElement.classList.add('dark');
-      localStorage.theme = 'dark';
+      document.documentElement.classList.add("dark");
+      localStorage.theme = "dark";
       setIsDark(true);
     }
   };
@@ -107,7 +121,7 @@ export function AppShell({ children }: AppShellProps) {
         <header className="hidden md:flex items-center justify-between px-6 lg:px-8 py-3.5 border-b border-border/80 bg-white/40 dark:bg-slate-900/40 backdrop-blur-sm">
           <div className="flex items-center gap-2 text-xs text-slate-400">
             <span className="font-semibold text-slate-700 dark:text-slate-300 capitalize">
-              {currentTab === 'admin' ? 'Life Admin' : currentTab}
+              {currentTab === "admin" ? "Life Admin" : currentTab}
             </span>
           </div>
 
@@ -124,14 +138,28 @@ export function AppShell({ children }: AppShellProps) {
             <button
               type="button"
               onClick={toggleTheme}
-              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
               className="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
-              {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              {isDark ? (
+                <Sun className="w-4 h-4" />
+              ) : (
+                <Moon className="w-4 h-4" />
+              )}
             </button>
           </div>
         </header>
 
+        <DataStatus />
+        <button
+          className="self-end px-6 text-xs"
+          onClick={async () => {
+            await createClient()?.auth.signOut();
+            location.assign("/login");
+          }}
+        >
+          Sign out
+        </button>
         {/* Page Canvas */}
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-5 md:py-8 max-w-6xl w-full mx-auto">
           {children({
@@ -148,7 +176,7 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Mobile Bottom Navigation (< 768px) */}
       <MobileNav
-        currentTab={currentTab === 'me' ? 'me' : 'today'}
+        currentTab={currentTab === "me" ? "me" : "today"}
         onTabChange={(tab) => setCurrentTab(tab)}
         onOpenQuickAdd={() => setIsQuickAddOpen(true)}
       />

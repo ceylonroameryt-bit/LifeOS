@@ -1,150 +1,129 @@
-import { CareerJob, Interview, JobFollowup, Recruiter, CVVersion } from '@/types';
-import { createClient } from '@/lib/supabase/client';
 import {
-  SEED_CAREER,
-  SEED_INTERVIEWS,
-  SEED_FOLLOWUPS,
-  SEED_RECRUITERS,
-  SEED_CV_VERSIONS,
-} from '@/lib/data/seedData';
-
-const JOBS_STORAGE_KEY = 'lifeos_career_jobs_store';
-const INTERVIEWS_STORAGE_KEY = 'lifeos_interviews_store';
-const FOLLOWUPS_STORAGE_KEY = 'lifeos_followups_store';
-
-function getLocal<T>(key: string, seed: T[]): T[] {
-  if (typeof window === 'undefined') return seed;
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) {
-      localStorage.setItem(key, JSON.stringify(seed));
-      return seed;
-    }
-    return JSON.parse(raw);
-  } catch {
-    return seed;
-  }
+  CareerJob,
+  Interview,
+  JobFollowup,
+  Recruiter,
+  CVVersion,
+} from "@/types";
+import { list, insert, update, remove } from "./store";
+import { webUrl } from "./validation";
+type JobRow = CareerJob & {
+  job_title: string;
+  applied_at: string;
+  salary_raw?: string;
+  followup_at?: string;
+};
+const map = (j: JobRow): CareerJob => ({
+  ...j,
+  title: j.job_title,
+  applied_date: j.applied_at,
+  salary: j.salary_raw,
+  follow_up_date: j.followup_at,
+});
+function jobInput(input: Partial<CareerJob>) {
+  const {
+    title,
+    applied_date,
+    salary,
+    follow_up_date,
+    recruiter,
+    cv_version,
+    id,
+    user_id,
+    ...rest
+  } = input;
+  return {
+    ...rest,
+    ...(input.job_url !== undefined ? { job_url: webUrl(input.job_url) } : {}),
+    ...(title !== undefined ? { job_title: title.trim() } : {}),
+    ...(applied_date !== undefined ? { applied_at: applied_date } : {}),
+    ...(salary !== undefined ? { salary_raw: salary } : {}),
+    ...(follow_up_date !== undefined ? { followup_at: follow_up_date } : {}),
+  };
 }
-
-function saveLocal<T>(key: string, data: T[], eventName: string) {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(key, JSON.stringify(data));
-    window.dispatchEvent(new Event(eventName));
-  } catch (e) {
-    console.error(`Failed to save ${key} locally:`, e);
-  }
-}
-
 export const careerService = {
-  async getJobs(): Promise<CareerJob[]> {
-    const supabase = createClient();
-    if (supabase) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data, error } = await supabase
-            .from('jobs')
-            .select('*')
-            .order('applied_at', { ascending: false });
-          if (!error && data && data.length > 0) {
-            return data.map((d) => ({
-              ...d,
-              title: d.job_title || d.title,
-              applied_date: d.applied_at || d.applied_date,
-            })) as CareerJob[];
-          }
-        }
-      } catch (err) {
-        console.warn('Supabase fetch failed, falling back to local storage:', err);
-      }
-    }
-    return getLocal<CareerJob>(JOBS_STORAGE_KEY, SEED_CAREER);
+  async getJobs() {
+    const [jobs, recruiters, cvs] = await Promise.all([
+      list<JobRow>("jobs"),
+      this.getRecruiters(),
+      this.getCVVersions(),
+    ]);
+    return jobs.map((j) => ({
+      ...map(j),
+      recruiter: recruiters.find((r) => r.id === j.recruiter_id)?.name,
+      cv_version: cvs.find((c) => c.id === j.cv_version_id)?.name,
+    }));
   },
-
-  async createJob(input: Partial<CareerJob> & { title: string; company: string }): Promise<CareerJob> {
-    const newJob: CareerJob = {
-      id: typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `job-${Date.now()}`,
-      user_id: 'guest',
-      title: input.title,
-      company: input.company,
-      location: input.location || 'Remote',
-      work_style: input.work_style || 'Hybrid',
-      salary: input.salary,
-      job_url: input.job_url,
-      applied_date: input.applied_date || new Date().toISOString().split('T')[0],
-      status: input.status || 'Applied',
-      next_action: input.next_action || 'Follow up with recruiter',
-      recruiter: input.recruiter,
-      cv_version: input.cv_version || 'SOC CV v12',
-      notes: input.notes,
-    };
-
-    const supabase = createClient();
-    if (supabase) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          newJob.user_id = user.id;
-          const { data, error } = await supabase
-            .from('jobs')
-            .insert({
-              id: newJob.id,
-              user_id: user.id,
-              job_title: newJob.title,
-              company: newJob.company,
-              location: newJob.location,
-              work_style: newJob.work_style,
-              job_url: newJob.job_url,
-              status: newJob.status,
-              applied_at: newJob.applied_date,
-              next_action: newJob.next_action,
-              notes: newJob.notes,
-            })
-            .select()
-            .single();
-
-          if (!error && data) {
-            window.dispatchEvent(new Event('lifeos-career-updated'));
-            return newJob;
-          }
-        }
-      } catch (err) {
-        console.warn('Supabase insert failed, saving locally:', err);
-      }
-    }
-
-    const current = getLocal<CareerJob>(JOBS_STORAGE_KEY, SEED_CAREER);
-    const updated = [newJob, ...current];
-    saveLocal(JOBS_STORAGE_KEY, updated, 'lifeos-career-updated');
-    return newJob;
+  async createJob(
+    input: Partial<CareerJob> & { title: string; company: string },
+  ) {
+    return map(await insert<JobRow>("jobs", jobInput(input), "career"));
   },
-
-  async updateJobStatus(id: string, status: CareerJob['status']): Promise<void> {
-    const current = getLocal<CareerJob>(JOBS_STORAGE_KEY, SEED_CAREER);
-    const updated = current.map((j) => (j.id === id ? { ...j, status } : j));
-    saveLocal(JOBS_STORAGE_KEY, updated, 'lifeos-career-updated');
+  async updateJob(id: string, input: Partial<CareerJob>) {
+    return map(await update<JobRow>("jobs", id, jobInput(input), "career"));
   },
-
-  async getInterviews(): Promise<Interview[]> {
-    return getLocal<Interview>(INTERVIEWS_STORAGE_KEY, SEED_INTERVIEWS);
+  updateJobStatus: (id: string, status: CareerJob["status"]) =>
+    update("jobs", id, { status }, "career"),
+  deleteJob: (id: string) => remove("jobs", id, "career"),
+  async getInterviews() {
+    const [rows, jobs] = await Promise.all([
+      list<Interview>("interviews"),
+      list<JobRow>("jobs"),
+    ]);
+    return rows.map((r) => ({
+      ...r,
+      job_title: jobs.find((j) => j.id === r.job_id)?.job_title || "",
+      company: jobs.find((j) => j.id === r.job_id)?.company || "",
+    }));
   },
-
-  async getFollowups(): Promise<JobFollowup[]> {
-    return getLocal<JobFollowup>(FOLLOWUPS_STORAGE_KEY, SEED_FOLLOWUPS);
+  createInterview: (
+    input: Omit<Interview, "id" | "user_id" | "job_title" | "company">,
+  ) =>
+    insert<Interview>(
+      "interviews",
+      { ...input, meeting_url: webUrl(input.meeting_url) },
+      "career",
+    ),
+  updateInterview: (
+    id: string,
+    input: Partial<Omit<Interview, "id" | "user_id" | "job_title" | "company">>,
+  ) => update<Interview>("interviews", id, input, "career"),
+  deleteInterview: (id: string) => remove("interviews", id, "career"),
+  async getFollowups() {
+    const [rows, jobs] = await Promise.all([
+      list<JobFollowup>("job_followups"),
+      list<JobRow>("jobs"),
+    ]);
+    return rows.map((r) => ({
+      ...r,
+      job_title: jobs.find((j) => j.id === r.job_id)?.job_title || "",
+      company: jobs.find((j) => j.id === r.job_id)?.company || "",
+    }));
   },
-
-  async completeFollowup(id: string): Promise<void> {
-    const current = getLocal<JobFollowup>(FOLLOWUPS_STORAGE_KEY, SEED_FOLLOWUPS);
-    const updated = current.map((f) => (f.id === id ? { ...f, status: 'completed' as const } : f));
-    saveLocal(FOLLOWUPS_STORAGE_KEY, updated, 'lifeos-career-updated');
-  },
-
-  async getRecruiters(): Promise<Recruiter[]> {
-    return SEED_RECRUITERS;
-  },
-
-  async getCVVersions(): Promise<CVVersion[]> {
-    return SEED_CV_VERSIONS;
-  },
+  createFollowup: (
+    input: Omit<JobFollowup, "id" | "user_id" | "job_title" | "company">,
+  ) => insert<JobFollowup>("job_followups", input, "career"),
+  completeFollowup: (id: string) =>
+    update("job_followups", id, { status: "completed" }, "career"),
+  deleteFollowup: (id: string) => remove("job_followups", id, "career"),
+  getRecruiters: () => list<Recruiter>("recruiters"),
+  createRecruiter: (input: Omit<Recruiter, "id" | "user_id">) =>
+    insert<Recruiter>("recruiters", input, "career"),
+  updateRecruiter: (
+    id: string,
+    input: Partial<Omit<Recruiter, "id" | "user_id">>,
+  ) => update<Recruiter>("recruiters", id, input, "career"),
+  deleteRecruiter: (id: string) => remove("recruiters", id, "career"),
+  getCVVersions: () => list<CVVersion>("cv_versions"),
+  createCVVersion: (input: Pick<CVVersion, "name" | "file_url" | "notes">) =>
+    insert<CVVersion>(
+      "cv_versions",
+      { ...input, file_url: webUrl(input.file_url) },
+      "career",
+    ),
+  updateCVVersion: (
+    id: string,
+    input: Pick<CVVersion, "name" | "file_url" | "notes">,
+  ) => update<CVVersion>("cv_versions", id, input, "career"),
+  deleteCVVersion: (id: string) => remove("cv_versions", id, "career"),
 };

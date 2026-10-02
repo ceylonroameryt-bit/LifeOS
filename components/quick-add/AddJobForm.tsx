@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { WorkStyle, JobStatus, CareerJob } from '@/types';
-import { careerService } from '@/lib/services/careerService';
-import { cn } from '@/lib/utils';
-import { Link2 } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import { WorkStyle, JobStatus, CareerJob } from "@/types";
+import { careerService } from "@/lib/services/careerService";
+import { cn } from "@/lib/utils";
+import { Link2 } from "lucide-react";
 
 interface AddJobFormProps {
   onClose: () => void;
@@ -12,38 +12,68 @@ interface AddJobFormProps {
   initialTitle?: string;
 }
 
-export function AddJobForm({ onClose, onSuccess, initialTitle = '' }: AddJobFormProps) {
-  const [jobUrl, setJobUrl] = useState('');
+export function AddJobForm({
+  onClose,
+  onSuccess,
+  initialTitle = "",
+}: AddJobFormProps) {
+  const [recruiters, setRecruiters] = useState<
+    Awaited<ReturnType<typeof careerService.getRecruiters>>
+  >([]);
+  const [error, setError] = useState("");
+  const [cvs, setCVs] = useState<
+    Awaited<ReturnType<typeof careerService.getCVVersions>>
+  >([]);
+  const [recruiterId, setRecruiterId] = useState("");
+  const [cvId, setCvId] = useState("");
+  useEffect(() => {
+    void Promise.all([
+      careerService.getRecruiters(),
+      careerService.getCVVersions(),
+    ]).then(([r, c]) => {
+      setRecruiters(r);
+      setCVs(c);
+    });
+  }, []);
+  const [jobUrl, setJobUrl] = useState("");
   const [jobTitle, setJobTitle] = useState(initialTitle);
-  const [company, setCompany] = useState('');
-  const [location, setLocation] = useState('Remote');
-  const [salary, setSalary] = useState('');
-  const [workStyle, setWorkStyle] = useState<WorkStyle>('Hybrid');
-  const [appliedDate, setAppliedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [status, setStatus] = useState<JobStatus>('Applied');
+  const [company, setCompany] = useState("");
+  const [location, setLocation] = useState("Remote");
+  const [salary, setSalary] = useState("");
+  const [workStyle, setWorkStyle] = useState<WorkStyle>("Hybrid");
+  const [appliedDate, setAppliedDate] = useState(
+    new Date().toISOString().split("T")[0],
+  );
+  const [status, setStatus] = useState<JobStatus>("Applied");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!jobTitle.trim() || !company.trim() || isSubmitting) return;
 
+    setError("");
     setIsSubmitting(true);
     try {
       await careerService.createJob({
+        recruiter_id: recruiterId || undefined,
+        cv_version_id: cvId || undefined,
         title: jobTitle.trim(),
         company: company.trim(),
-        location: location.trim() || 'Remote',
+        location: location.trim() || "Remote",
         work_style: workStyle,
         salary: salary.trim() || undefined,
         job_url: jobUrl.trim() || undefined,
         applied_date: appliedDate,
         status,
-        next_action: status === 'Applied' ? 'Follow up in 5 days' : undefined,
+        next_action: status === "Applied" ? "Follow up in 5 days" : undefined,
       });
       onSuccess();
       onClose();
     } catch (err) {
-      console.error('Failed to create job:', err);
+      setError(
+        err instanceof Error ? err.message : "Save failed. Please retry.",
+      );
+      console.error("Failed to create job:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -51,6 +81,11 @@ export function AddJobForm({ onClose, onSuccess, initialTitle = '' }: AddJobForm
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col bg-card w-full">
+      {error && (
+        <p role="alert" className="px-6 py-2 text-sm text-danger">
+          {error}
+        </p>
+      )}
       {/* Top Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/80">
         <button
@@ -70,7 +105,7 @@ export function AddJobForm({ onClose, onSuccess, initialTitle = '' }: AddJobForm
           disabled={!jobTitle.trim() || !company.trim() || isSubmitting}
           className="text-primary font-bold text-base hover:opacity-80 disabled:opacity-40 transition-opacity"
         >
-          {isSubmitting ? 'Saving...' : 'Save Job'}
+          {isSubmitting ? "Saving..." : "Save Job"}
         </button>
       </div>
 
@@ -143,16 +178,16 @@ export function AddJobForm({ onClose, onSuccess, initialTitle = '' }: AddJobForm
             WORK STYLE
           </label>
           <div className="grid grid-cols-3 gap-1 bg-slate-100 dark:bg-slate-800/70 p-1 rounded-xl">
-            {(['Remote', 'Hybrid', 'Office'] as WorkStyle[]).map((ws) => (
+            {(["Remote", "Hybrid", "Office"] as WorkStyle[]).map((ws) => (
               <button
                 key={ws}
                 type="button"
                 onClick={() => setWorkStyle(ws)}
                 className={cn(
-                  'py-2 text-xs font-semibold rounded-lg transition-all',
+                  "py-2 text-xs font-semibold rounded-lg transition-all",
                   workStyle === ws
-                    ? 'bg-surface text-slate-900 dark:text-slate-100 shadow-2xs font-bold'
-                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                    ? "bg-surface text-slate-900 dark:text-slate-100 shadow-2xs font-bold"
+                    : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200",
                 )}
               >
                 {ws}
@@ -161,6 +196,38 @@ export function AddJobForm({ onClose, onSuccess, initialTitle = '' }: AddJobForm
           </div>
         </div>
 
+        <div className="bg-surface rounded-2xl border border-border p-4 space-y-3">
+          <label className="block text-sm">
+            Recruiter
+            <select
+              className="block w-full bg-surface"
+              value={recruiterId}
+              onChange={(e) => setRecruiterId(e.target.value)}
+            >
+              <option value="">Not linked</option>
+              {recruiters.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm">
+            CV version
+            <select
+              className="block w-full bg-surface"
+              value={cvId}
+              onChange={(e) => setCvId(e.target.value)}
+            >
+              <option value="">Not linked</option>
+              {cvs.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
         {/* Applied Date & Status */}
         <div className="bg-surface rounded-2xl border border-border/80 px-4 py-3 shadow-2xs divide-y divide-border/60">
           <div className="flex items-center justify-between py-2 text-sm">

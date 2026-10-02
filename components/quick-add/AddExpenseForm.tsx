@@ -1,9 +1,18 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { moneyService } from '@/lib/services/moneyService';
-import { X, Utensils, ShoppingBag, Car, Film, Receipt, RefreshCw, Tag } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useState } from "react";
+import { moneyService } from "@/lib/services/moneyService";
+import {
+  X,
+  Utensils,
+  ShoppingBag,
+  Car,
+  Film,
+  Receipt,
+  RefreshCw,
+  Tag,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface AddExpenseFormProps {
   onClose: () => void;
@@ -14,23 +23,24 @@ interface AddExpenseFormProps {
 export function AddExpenseForm({
   onClose,
   onSuccess,
-  initialDescription = '',
+  initialDescription = "",
 }: AddExpenseFormProps) {
-  const [amount, setAmount] = useState('');
+  const [amount, setAmount] = useState("");
+  const [error, setError] = useState("");
   const [description, setDescription] = useState(initialDescription);
-  const [category, setCategory] = useState('Food');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [notes, setNotes] = useState('');
+  const [category, setCategory] = useState("Food");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const categories = [
-    { name: 'Food', icon: Utensils },
-    { name: 'Shopping', icon: ShoppingBag },
-    { name: 'Transport', icon: Car },
-    { name: 'Entertainment', icon: Film },
-    { name: 'Bills', icon: Receipt },
-    { name: 'Subscriptions', icon: RefreshCw },
-    { name: 'Other', icon: Tag },
+    { name: "Food", icon: Utensils },
+    { name: "Shopping", icon: ShoppingBag },
+    { name: "Transport", icon: Car },
+    { name: "Entertainment", icon: Film },
+    { name: "Bills", icon: Receipt },
+    { name: "Subscriptions", icon: RefreshCw },
+    { name: "Other", icon: Tag },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,6 +49,7 @@ export function AddExpenseForm({
     if (isNaN(parsedAmount) || parsedAmount <= 0) return;
     if (!description.trim()) return;
 
+    setError("");
     setIsSubmitting(true);
     try {
       await moneyService.addExpense({
@@ -51,7 +62,10 @@ export function AddExpenseForm({
       onSuccess();
       onClose();
     } catch (err) {
-      console.error('Failed to save expense:', err);
+      setError(
+        err instanceof Error ? err.message : "Save failed. Please retry.",
+      );
+      console.error("Failed to save expense:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -59,6 +73,11 @@ export function AddExpenseForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
+      {error && (
+        <p role="alert" className="px-6 py-2 text-sm text-danger">
+          {error}
+        </p>
+      )}
       {/* Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/80">
         <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
@@ -128,10 +147,10 @@ export function AddExpenseForm({
                   type="button"
                   onClick={() => setCategory(cat.name)}
                   className={cn(
-                    'flex items-center gap-1.5 p-2 rounded-xl border text-xs font-medium transition-all text-left',
+                    "flex items-center gap-1.5 p-2 rounded-xl border text-xs font-medium transition-all text-left",
                     isSelected
-                      ? 'bg-blue-50 dark:bg-blue-950/60 text-primary border-primary/50 shadow-2xs font-semibold'
-                      : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                      ? "bg-blue-50 dark:bg-blue-950/60 text-primary border-primary/50 shadow-2xs font-semibold"
+                      : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800",
                   )}
                 >
                   <Icon className="w-3.5 h-3.5 flex-shrink-0" />
@@ -170,7 +189,7 @@ export function AddExpenseForm({
           disabled={!amount || !description.trim() || isSubmitting}
           className="px-5 py-2 text-sm font-semibold text-white bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all shadow-sm"
         >
-          {isSubmitting ? 'Saving...' : 'Save Expense'}
+          {isSubmitting ? "Saving..." : "Save Expense"}
         </button>
       </div>
     </form>

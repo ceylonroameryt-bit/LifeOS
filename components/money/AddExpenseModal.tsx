@@ -1,9 +1,18 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { moneyService } from '@/lib/services/moneyService';
-import { X, Utensils, ShoppingBag, Car, Film, Receipt, RefreshCw, Tag } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useState } from "react";
+import { moneyService } from "@/lib/services/moneyService";
+import {
+  X,
+  Utensils,
+  ShoppingBag,
+  Car,
+  Film,
+  Receipt,
+  RefreshCw,
+  Tag,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface AddExpenseModalProps {
   isOpen: boolean;
@@ -11,24 +20,57 @@ interface AddExpenseModalProps {
   onSuccess: () => void;
 }
 
-export function AddExpenseModal({ isOpen, onClose, onSuccess }: AddExpenseModalProps) {
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('Food');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [notes, setNotes] = useState('');
+export function AddExpenseModal({
+  isOpen,
+  onClose,
+  onSuccess,
+}: AddExpenseModalProps) {
+  const [amount, setAmount] = useState("");
+  const [error, setError] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("Food");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
   const categories = [
-    { name: 'Food', icon: Utensils, color: 'text-amber-500 bg-amber-50 dark:bg-amber-950/40' },
-    { name: 'Shopping', icon: ShoppingBag, color: 'text-blue-500 bg-blue-50 dark:bg-blue-950/40' },
-    { name: 'Transport', icon: Car, color: 'text-cyan-500 bg-cyan-50 dark:bg-cyan-950/40' },
-    { name: 'Entertainment', icon: Film, color: 'text-purple-500 bg-purple-50 dark:bg-purple-950/40' },
-    { name: 'Bills', icon: Receipt, color: 'text-rose-500 bg-rose-50 dark:bg-rose-950/40' },
-    { name: 'Subscriptions', icon: RefreshCw, color: 'text-emerald-500 bg-emerald-50 dark:bg-emerald-950/40' },
-    { name: 'Other', icon: Tag, color: 'text-slate-500 bg-slate-50 dark:bg-slate-800' },
+    {
+      name: "Food",
+      icon: Utensils,
+      color: "text-amber-500 bg-amber-50 dark:bg-amber-950/40",
+    },
+    {
+      name: "Shopping",
+      icon: ShoppingBag,
+      color: "text-blue-500 bg-blue-50 dark:bg-blue-950/40",
+    },
+    {
+      name: "Transport",
+      icon: Car,
+      color: "text-cyan-500 bg-cyan-50 dark:bg-cyan-950/40",
+    },
+    {
+      name: "Entertainment",
+      icon: Film,
+      color: "text-purple-500 bg-purple-50 dark:bg-purple-950/40",
+    },
+    {
+      name: "Bills",
+      icon: Receipt,
+      color: "text-rose-500 bg-rose-50 dark:bg-rose-950/40",
+    },
+    {
+      name: "Subscriptions",
+      icon: RefreshCw,
+      color: "text-emerald-500 bg-emerald-50 dark:bg-emerald-950/40",
+    },
+    {
+      name: "Other",
+      icon: Tag,
+      color: "text-slate-500 bg-slate-50 dark:bg-slate-800",
+    },
   ];
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,6 +79,7 @@ export function AddExpenseModal({ isOpen, onClose, onSuccess }: AddExpenseModalP
     if (isNaN(parsedAmount) || parsedAmount <= 0) return;
     if (!description.trim()) return;
 
+    setError("");
     setIsSubmitting(true);
     try {
       await moneyService.addExpense({
@@ -49,7 +92,10 @@ export function AddExpenseModal({ isOpen, onClose, onSuccess }: AddExpenseModalP
       onSuccess();
       onClose();
     } catch (err) {
-      console.error('Failed to save expense:', err);
+      setError(
+        err instanceof Error ? err.message : "Save failed. Please retry.",
+      );
+      console.error("Failed to save expense:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -80,7 +126,15 @@ export function AddExpenseModal({ isOpen, onClose, onSuccess }: AddExpenseModalP
         </div>
 
         {/* Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5 flex-1 overflow-y-auto">
+        <form
+          onSubmit={handleSubmit}
+          className="p-6 space-y-5 flex-1 overflow-y-auto"
+        >
+          {error && (
+            <p role="alert" className="px-6 py-2 text-sm text-danger">
+              {error}
+            </p>
+          )}
           {/* Amount Input */}
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1.5">
@@ -134,10 +188,10 @@ export function AddExpenseModal({ isOpen, onClose, onSuccess }: AddExpenseModalP
                     type="button"
                     onClick={() => setCategory(cat.name)}
                     className={cn(
-                      'flex items-center gap-1.5 p-2 rounded-xl border text-xs font-medium transition-all text-left',
+                      "flex items-center gap-1.5 p-2 rounded-xl border text-xs font-medium transition-all text-left",
                       isSelected
-                        ? 'bg-blue-50 dark:bg-blue-950/60 text-primary border-primary/50 shadow-2xs font-semibold'
-                        : 'border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                        ? "bg-blue-50 dark:bg-blue-950/60 text-primary border-primary/50 shadow-2xs font-semibold"
+                        : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800",
                     )}
                   >
                     <Icon className="w-3.5 h-3.5 flex-shrink-0" />
@@ -189,7 +243,7 @@ export function AddExpenseModal({ isOpen, onClose, onSuccess }: AddExpenseModalP
               disabled={!amount || !description.trim() || isSubmitting}
               className="px-5 py-2.5 text-sm font-semibold text-white bg-primary hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all shadow-sm"
             >
-              {isSubmitting ? 'Saving...' : 'Save Expense'}
+              {isSubmitting ? "Saving..." : "Save Expense"}
             </button>
           </div>
         </form>

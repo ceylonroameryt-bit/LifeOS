@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { noteService } from '@/lib/services/noteService';
+import React, { useState } from "react";
+import { noteService } from "@/lib/services/noteService";
 
 interface AddNoteFormProps {
   onClose: () => void;
@@ -9,15 +9,21 @@ interface AddNoteFormProps {
   initialTitle?: string;
 }
 
-export function AddNoteForm({ onClose, onSuccess, initialTitle = '' }: AddNoteFormProps) {
+export function AddNoteForm({
+  onClose,
+  onSuccess,
+  initialTitle = "",
+}: AddNoteFormProps) {
   const [title, setTitle] = useState(initialTitle);
-  const [body, setBody] = useState('');
+  const [error, setError] = useState("");
+  const [body, setBody] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!title.trim() || isSubmitting) return;
 
+    setError("");
     setIsSubmitting(true);
     try {
       await noteService.createNote({
@@ -27,7 +33,10 @@ export function AddNoteForm({ onClose, onSuccess, initialTitle = '' }: AddNoteFo
       onSuccess();
       onClose();
     } catch (err) {
-      console.error('Failed to create note:', err);
+      setError(
+        err instanceof Error ? err.message : "Save failed. Please retry.",
+      );
+      console.error("Failed to create note:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -35,6 +44,11 @@ export function AddNoteForm({ onClose, onSuccess, initialTitle = '' }: AddNoteFo
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col bg-card w-full">
+      {error && (
+        <p role="alert" className="px-6 py-2 text-sm text-danger">
+          {error}
+        </p>
+      )}
       {/* Top Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/80">
         <button
@@ -54,7 +68,7 @@ export function AddNoteForm({ onClose, onSuccess, initialTitle = '' }: AddNoteFo
           disabled={!title.trim() || isSubmitting}
           className="text-primary font-bold text-base hover:opacity-80 disabled:opacity-40 transition-opacity"
         >
-          {isSubmitting ? 'Saving...' : 'Save Note'}
+          {isSubmitting ? "Saving..." : "Save Note"}
         </button>
       </div>
 

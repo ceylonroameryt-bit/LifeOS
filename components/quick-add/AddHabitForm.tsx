@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { HabitType } from '@/types';
-import { habitService } from '@/lib/services/habitService';
-import { cn } from '@/lib/utils';
+import React, { useState } from "react";
+import { HabitType } from "@/types";
+import { habitService } from "@/lib/services/habitService";
+import { cn } from "@/lib/utils";
 
 interface AddHabitFormProps {
   onClose: () => void;
@@ -11,27 +11,36 @@ interface AddHabitFormProps {
   initialTitle?: string;
 }
 
-export function AddHabitForm({ onClose, onSuccess, initialTitle = '' }: AddHabitFormProps) {
+export function AddHabitForm({
+  onClose,
+  onSuccess,
+  initialTitle = "",
+}: AddHabitFormProps) {
   const [name, setName] = useState(initialTitle);
-  const [type, setType] = useState<HabitType>('positive');
-  const [target, setTarget] = useState('5 days / week');
+  const [error, setError] = useState("");
+  const [type, setType] = useState<HabitType>("positive");
+  const [target, setTarget] = useState("5 days / week");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!name.trim() || isSubmitting) return;
 
+    setError("");
     setIsSubmitting(true);
     try {
       await habitService.createHabit({
         name: name.trim(),
         type,
-        target: type === 'positive' ? target : 'Every day',
+        target: type === "positive" ? target : "Every day",
       });
       onSuccess();
       onClose();
     } catch (err) {
-      console.error('Failed to create habit:', err);
+      setError(
+        err instanceof Error ? err.message : "Save failed. Please retry.",
+      );
+      console.error("Failed to create habit:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -39,6 +48,11 @@ export function AddHabitForm({ onClose, onSuccess, initialTitle = '' }: AddHabit
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col bg-card w-full">
+      {error && (
+        <p role="alert" className="px-6 py-2 text-sm text-danger">
+          {error}
+        </p>
+      )}
       {/* Top Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/80">
         <button
@@ -58,7 +72,7 @@ export function AddHabitForm({ onClose, onSuccess, initialTitle = '' }: AddHabit
           disabled={!name.trim() || isSubmitting}
           className="text-primary font-bold text-base hover:opacity-80 disabled:opacity-40 transition-opacity"
         >
-          {isSubmitting ? 'Saving...' : 'Save Habit'}
+          {isSubmitting ? "Saving..." : "Save Habit"}
         </button>
       </div>
 
@@ -73,14 +87,14 @@ export function AddHabitForm({ onClose, onSuccess, initialTitle = '' }: AddHabit
             <button
               type="button"
               onClick={() => {
-                setType('positive');
-                setTarget('5 days / week');
+                setType("positive");
+                setTarget("5 days / week");
               }}
               className={cn(
-                'py-2 text-xs font-semibold rounded-lg transition-all',
-                type === 'positive'
-                  ? 'bg-surface text-success shadow-2xs font-bold'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                "py-2 text-xs font-semibold rounded-lg transition-all",
+                type === "positive"
+                  ? "bg-surface text-success shadow-2xs font-bold"
+                  : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200",
               )}
             >
               Build Habit
@@ -88,14 +102,14 @@ export function AddHabitForm({ onClose, onSuccess, initialTitle = '' }: AddHabit
             <button
               type="button"
               onClick={() => {
-                setType('avoid');
-                setTarget('Every day');
+                setType("avoid");
+                setTarget("Every day");
               }}
               className={cn(
-                'py-2 text-xs font-semibold rounded-lg transition-all',
-                type === 'avoid'
-                  ? 'bg-surface text-danger shadow-2xs font-bold'
-                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+                "py-2 text-xs font-semibold rounded-lg transition-all",
+                type === "avoid"
+                  ? "bg-surface text-danger shadow-2xs font-bold"
+                  : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200",
               )}
             >
               Avoid Habit
@@ -111,13 +125,17 @@ export function AddHabitForm({ onClose, onSuccess, initialTitle = '' }: AddHabit
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder={type === 'positive' ? 'e.g. Gym, Reading, Sleep before 12' : 'e.g. No impulse buying'}
+            placeholder={
+              type === "positive"
+                ? "e.g. Gym, Reading, Sleep before 12"
+                : "e.g. No impulse buying"
+            }
             className="w-full text-base bg-transparent text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none font-medium"
           />
         </div>
 
         {/* Target Frequency for positive habits */}
-        {type === 'positive' && (
+        {type === "positive" && (
           <div className="bg-surface rounded-2xl border border-border/80 px-4 py-3 shadow-2xs">
             <div className="flex items-center justify-between text-sm py-1">
               <span className="font-medium text-slate-800 dark:text-slate-200">

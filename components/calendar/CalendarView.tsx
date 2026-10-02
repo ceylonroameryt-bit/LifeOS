@@ -1,37 +1,80 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Calendar as CalendarIcon, Clock, Briefcase, Shield, CreditCard, ChevronLeft, ChevronRight } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useState, useEffect } from "react";
+import {
+  Calendar as CalendarIcon,
+  Clock,
+  Briefcase,
+  Shield,
+  CreditCard,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { taskService } from "@/lib/services/taskService";
+import { careerService } from "@/lib/services/careerService";
+import { adminService } from "@/lib/services/adminService";
+import { moneyService } from "@/lib/services/moneyService";
+import { startOfMonth, addMonths, getDaysInMonth, format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 interface CalendarEventItem {
   id: string;
   time: string;
   title: string;
-  category: 'interview' | 'task' | 'admin' | 'subscription';
+  category: "interview" | "task" | "admin" | "subscription";
   meta?: string;
 }
 
 export function CalendarView() {
-  const [selectedDay, setSelectedDay] = useState(1); // 1st October 2026
-
-  const events: Record<number, CalendarEventItem[]> = {
-    1: [
-      { id: '1', time: '6:00 PM', title: 'Gym (Upper body & mobility)', category: 'task' },
-      { id: '2', time: 'All Day', title: 'Work on SOC-AI parser', category: 'task' },
-    ],
-    2: [
-      { id: '3', time: '2:00 PM', title: 'Technical Interview with ABC Security', category: 'interview', meta: 'Teams meeting' },
-      { id: '4', time: '11:00 AM', title: 'Follow up with David Clark (XYZ Ltd)', category: 'interview' },
-    ],
-    3: [
-      { id: '5', time: 'Renewal', title: 'Netflix subscription renews (£10.99)', category: 'subscription' },
-    ],
-    12: [
-      { id: '6', time: 'Deadline', title: 'Car insurance contract expiry (£420)', category: 'admin', meta: 'Admiral' },
-    ],
-  };
-
+  const [selectedDay, setSelectedDay] = useState(new Date().getDate());
+  const [month, setMonth] = useState(startOfMonth(new Date()));
+  const [events, setEvents] = useState<Record<number, CalendarEventItem[]>>({});
+  useEffect(() => {
+    void Promise.all([
+      taskService.getTasks(),
+      careerService.getInterviews(),
+      adminService.getAdminItems(),
+      moneyService.getSubscriptions(),
+    ]).then(([tasks, interviews, admin, subscriptions]) => {
+      const rows = [
+        ...tasks.map((t) => ({
+          id: t.id,
+          date: t.due_date,
+          time: t.due_time || "All day",
+          title: t.title,
+          category: "task" as const,
+        })),
+        ...interviews.map((i) => ({
+          id: i.id,
+          date: i.interview_date,
+          time: i.interview_time || "All day",
+          title: i.job_title + " — " + i.company,
+          category: "interview" as const,
+        })),
+        ...admin.map((i) => ({
+          id: i.id,
+          date: i.due_date,
+          time: "Deadline",
+          title: i.title,
+          category: "admin" as const,
+        })),
+        ...subscriptions.map((s) => ({
+          id: s.id,
+          date: s.renewal_date,
+          time: "Renewal",
+          title: s.name,
+          category: "subscription" as const,
+        })),
+      ];
+      const mapped: Record<number, CalendarEventItem[]> = {};
+      for (const row of rows) {
+        if (!row.date?.startsWith(format(month, "yyyy-MM"))) continue;
+        const day = Number(row.date.slice(8, 10));
+        (mapped[day] ??= []).push(row);
+      }
+      setEvents(mapped);
+    });
+  }, [month]);
   const dayEvents = events[selectedDay] || [];
 
   return (
@@ -51,13 +94,29 @@ export function CalendarView() {
         <div className="md:col-span-7 bg-surface rounded-3xl border border-border/80 p-5 shadow-2xs space-y-4">
           <div className="flex items-center justify-between pb-3 border-b border-border/60">
             <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-              October 2026
+              {format(month, "MMMM yyyy")}
             </h3>
             <div className="flex items-center gap-1 text-slate-400">
-              <button type="button" className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+              <button
+                type="button"
+                aria-label="Previous month"
+                onClick={() => {
+                  setMonth(addMonths(month, -1));
+                  setSelectedDay(1);
+                }}
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <button type="button" className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800">
+              <button
+                type="button"
+                aria-label="Next month"
+                onClick={() => {
+                  setMonth(addMonths(month, 1));
+                  setSelectedDay(1);
+                }}
+                className="p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -65,40 +124,47 @@ export function CalendarView() {
 
           {/* Days Grid */}
           <div className="grid grid-cols-7 gap-1 text-center text-xs">
-            {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => (
+            {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
               <span key={i} className="font-bold text-slate-400 py-1.5">
                 {d}
               </span>
             ))}
             {/* September trailing padding */}
-            {[28, 29, 30].map((d) => (
-              <div key={d} className="py-2.5 text-slate-300 dark:text-slate-600 font-medium">
-                {d}
-              </div>
-            ))}
-            {/* October days 1 to 31 */}
-            {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => {
-              const hasEvents = !!events[day];
-              const isSelected = selectedDay === day;
-              return (
-                <button
-                  key={day}
-                  type="button"
-                  onClick={() => setSelectedDay(day)}
-                  className={cn(
-                    'py-2.5 rounded-xl font-bold transition-all relative',
-                    isSelected
-                      ? 'bg-primary text-white shadow-xs'
-                      : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200'
-                  )}
+            {Array.from({ length: (month.getDay() + 6) % 7 }, (_, i) => i).map(
+              (d) => (
+                <div
+                  key={d}
+                  className="py-2.5 text-slate-300 dark:text-slate-600 font-medium"
                 >
-                  <span>{day}</span>
-                  {hasEvents && !isSelected && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-primary absolute bottom-1.5 left-1/2 -translate-x-1/2" />
-                  )}
-                </button>
-              );
-            })}
+                  {d}
+                </div>
+              ),
+            )}
+            {/* October days 1 to 31 */}
+            {Array.from({ length: getDaysInMonth(month) }, (_, i) => i + 1).map(
+              (day) => {
+                const hasEvents = !!events[day];
+                const isSelected = selectedDay === day;
+                return (
+                  <button
+                    key={day}
+                    type="button"
+                    onClick={() => setSelectedDay(day)}
+                    className={cn(
+                      "py-2.5 rounded-xl font-bold transition-all relative",
+                      isSelected
+                        ? "bg-primary text-white shadow-xs"
+                        : "hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200",
+                    )}
+                  >
+                    <span>{day}</span>
+                    {hasEvents && !isSelected && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary absolute bottom-1.5 left-1/2 -translate-x-1/2" />
+                    )}
+                  </button>
+                );
+              },
+            )}
           </div>
         </div>
 
@@ -107,7 +173,7 @@ export function CalendarView() {
           <div className="flex items-center justify-between pb-3 border-b border-border/60">
             <div>
               <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-                {selectedDay === 1 ? 'Today, 1 October' : `${selectedDay} October 2026`}
+                {selectedDay} {format(month, "MMMM yyyy")}
               </h3>
               <p className="text-xs text-slate-400">
                 {dayEvents.length} scheduled items
@@ -139,7 +205,9 @@ export function CalendarView() {
                     {evt.title}
                   </h4>
                   {evt.meta && (
-                    <p className="text-xs text-slate-500 dark:text-slate-400">{evt.meta}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {evt.meta}
+                    </p>
                   )}
                 </div>
               ))}

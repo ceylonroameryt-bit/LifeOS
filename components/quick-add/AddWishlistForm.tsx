@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { wishlistService } from '@/lib/services/wishlistService';
+import React, { useState } from "react";
+import { wishlistService } from "@/lib/services/wishlistService";
 
 interface AddWishlistFormProps {
   onClose: () => void;
@@ -9,12 +9,17 @@ interface AddWishlistFormProps {
   initialTitle?: string;
 }
 
-export function AddWishlistForm({ onClose, onSuccess, initialTitle = '' }: AddWishlistFormProps) {
+export function AddWishlistForm({
+  onClose,
+  onSuccess,
+  initialTitle = "",
+}: AddWishlistFormProps) {
   const [title, setTitle] = useState(initialTitle);
-  const [price, setPrice] = useState('');
-  const [url, setUrl] = useState('');
+  const [error, setError] = useState("");
+  const [price, setPrice] = useState("");
+  const [url, setUrl] = useState("");
   const [waitHours, setWaitHours] = useState(48);
-  const [notes, setNotes] = useState('');
+  const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -22,6 +27,7 @@ export function AddWishlistForm({ onClose, onSuccess, initialTitle = '' }: AddWi
     const numPrice = parseFloat(price);
     if (!title.trim() || isNaN(numPrice) || isSubmitting) return;
 
+    setError("");
     setIsSubmitting(true);
     try {
       await wishlistService.createItem({
@@ -34,7 +40,10 @@ export function AddWishlistForm({ onClose, onSuccess, initialTitle = '' }: AddWi
       onSuccess();
       onClose();
     } catch (err) {
-      console.error('Failed to create wishlist item:', err);
+      setError(
+        err instanceof Error ? err.message : "Save failed. Please retry.",
+      );
+      console.error("Failed to create wishlist item:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -42,6 +51,11 @@ export function AddWishlistForm({ onClose, onSuccess, initialTitle = '' }: AddWi
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col bg-card w-full">
+      {error && (
+        <p role="alert" className="px-6 py-2 text-sm text-danger">
+          {error}
+        </p>
+      )}
       {/* Top Header */}
       <div className="flex items-center justify-between px-6 py-4 border-b border-border/80">
         <button
@@ -61,7 +75,7 @@ export function AddWishlistForm({ onClose, onSuccess, initialTitle = '' }: AddWi
           disabled={!title.trim() || !price.trim() || isSubmitting}
           className="text-primary font-bold text-base hover:opacity-80 disabled:opacity-40 transition-opacity"
         >
-          {isSubmitting ? 'Saving...' : 'Start Wait'}
+          {isSubmitting ? "Saving..." : "Start Wait"}
         </button>
       </div>
 
